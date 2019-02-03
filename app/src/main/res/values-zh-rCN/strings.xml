@@ -1,0 +1,27 @@
+<resources>
+  <string name="app_name">授权</string>
+
+  <string name="permission_name_calendar">访问日历权限</string>
+  <string name="permission_name_camera">使用摄像头</string>
+  <string name="permission_name_contacts">读取联系人信息</string>
+  <string name="permission_name_location">读取位置信息</string>
+  <string name="permission_name_microphone">扩音器</string>
+  <string name="permission_name_phone">拨打电话</string>
+  <string name="permission_name_sensors">传感器</string>
+  <string name="permission_name_sms">发送短信</string>
+  <string name="permission_name_storage">读取、写入或删除存储空间</string>
+
+  <string name="permission_setting">设置</string>
+  <string name="permission_allow">允许</string>
+  <string name="permission_forbid">禁止</string>
+  <string name="permission_ok">前往设置</string>
+  <string name="permission_no">暂不设置</string>
+
+  <string name="permission_title_rationale">提示</string>
+  <string name="permission_rationale">授予以下权限以继续该程序:\n\n%1$s</string>
+  <string name="permission_setting_rationale">“%1$s”需要这些权限，以便更好的服务，请在设置中授权:\n\n%2$s</string>
+  <string name="permission_take_photos">请授予拍照权限</string>
+  <string name="permission_storage">请授予访问存储权限</string>
+  <string name="permission_take_photo">拍照</string>
+  <string name="permission_select_album">从相册选取</string>
+</resources>
