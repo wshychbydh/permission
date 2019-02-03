@@ -12,11 +12,11 @@
 #### 示例：
 
 ```
- PermissionHelper.Builder(params.wrapper!!.context())
-
-         .permissions(Permission.STORAGE) // 设置需要请求的权限
-         .rationale()           //需要定制的提示弹框（可以不设置）
-         .rationaleSetting()    //需要定制的引导设置弹框（可以不设置）
+ PermissionHelper.Builder(context)
+         .permission(permission)           // 设置需要请求的单个权限
+         .permissions(permissions)         // 设置需要请求的权限组
+         .rationale(rationale)             //需要定制的提示弹框（可以不设置）
+         .rationaleSetting(rationale)      //需要定制的引导设置弹框（可以不设置）
          .permissionCallback {
            if (it) {
              // 请求权限成功
