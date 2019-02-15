@@ -11,14 +11,12 @@ import java.util.*
  */
 object Permission {
 
-  @TargetApi(20)
   const val BODY_SENSORS = android.Manifest.permission.BODY_SENSORS
 
   const val CAMERA = android.Manifest.permission.CAMERA
 
   const val WRITE_STORAGE = android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 
-  @TargetApi(16)
   const val READ_STORAGE = android.Manifest.permission.READ_EXTERNAL_STORAGE
 
   @JvmStatic

@@ -1,12 +1,12 @@
 package com.eye.cool.permission
 
+import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.support.annotation.RequiresApi
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -15,7 +15,7 @@ import android.view.WindowManager
  * Request permissions.
  * Created cool on 2018/4/16.
  */
-@RequiresApi(api = Build.VERSION_CODES.M)
+@TargetApi(Build.VERSION_CODES.M)
 class PermissionActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {

@@ -1,9 +1,9 @@
 package com.eye.cool.permission
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.annotation.RequiresApi
 import java.util.*
 
 /**
@@ -29,7 +29,7 @@ class PermissionHelper private constructor(private var context: Context) {
     }
   }
 
-  @RequiresApi(Build.VERSION_CODES.M)
+  @TargetApi(Build.VERSION_CODES.M)
   private fun requestPermission(context: Context) {
     //Some permissions need request.
     val checkPermission = getRequestPermission(context, permissions)
@@ -43,7 +43,10 @@ class PermissionHelper private constructor(private var context: Context) {
       if (showRationale) {
         rationale?.showRationale(context, checkPermission) {
           if (it) {
-            PermissionActivity.requestPermission(context, permissions!!) { requestPermissions, grantResults ->
+            PermissionActivity.requestPermission(
+                context,
+                permissions!!
+            ) { requestPermissions, grantResults ->
               verifyPermissions(requestPermissions, grantResults)
             }
           } else {
@@ -124,12 +127,12 @@ class PermissionHelper private constructor(private var context: Context) {
       return this
     }
 
-    fun rationale(rationale: Rationale): Builder {
+    fun rationale(rationale: Rationale?): Builder {
       this.rationale = rationale
       return this
     }
 
-    fun rationaleSetting(rationaleSetting: Rationale): Builder {
+    fun rationaleSetting(rationaleSetting: Rationale?): Builder {
       this.rationaleSetting = rationaleSetting
       return this
     }
@@ -159,7 +162,7 @@ class PermissionHelper private constructor(private var context: Context) {
       }
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
+    @TargetApi(Build.VERSION_CODES.M)
     private fun getRequestPermission(context: Context, permissions: Array<String>?): Array<String> {
       val requestList = mutableListOf<String>()
       permissions?.forEach {
