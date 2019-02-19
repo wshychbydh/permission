@@ -16,7 +16,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-            implementation 'com.github.wshychbydh:Permission:Tag'
+            implementation 'com.github.wshychbydh:permission:Tag'
     }
 ```
 
