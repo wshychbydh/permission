@@ -1,5 +1,4 @@
 <resources>
-  <string name="app_name">Permission</string>
   <string name="permission_name_calendar">Calendar</string>
   <string name="permission_name_camera">Camera</string>
   <string name="permission_name_contacts">Contacts</string>

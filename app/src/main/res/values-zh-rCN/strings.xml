@@ -1,5 +1,4 @@
 <resources>
-  <string name="app_name">授权</string>
 
   <string name="permission_name_calendar">访问日历权限</string>
   <string name="permission_name_camera">使用摄像头</string>

@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.text.TextUtils
 
+
 /**
  * Created by cool on 2018/4/20.
  */
@@ -13,7 +14,7 @@ internal class SettingRationale : Rationale {
 
     val permissionNames = Permission.transformText(context, permissions)
     val message = context.getString(R.string.permission_setting_rationale,
-        context.getString(R.string.app_name), TextUtils.join("\n", permissionNames))
+        getAppName(context), TextUtils.join("\n", permissionNames))
 
     val settingService = PermissionSetting(context)
 
@@ -24,5 +25,10 @@ internal class SettingRationale : Rationale {
         .setPositiveButton(R.string.permission_setting) { _, _ -> settingService.start() }
         .setNegativeButton(R.string.permission_no) { _, _ -> settingService.cancel() }
         .show()
+  }
+
+  private fun getAppName(context: Context): String {
+    val applicationInfo = context.packageManager.getApplicationInfo(context.packageName, 0) ?: return ""
+    return context.packageManager.getApplicationLabel(applicationInfo) as? String ?: ""
   }
 }
