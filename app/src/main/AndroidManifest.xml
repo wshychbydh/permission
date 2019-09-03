@@ -2,11 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
   package="com.eye.cool.permission">
 
-  <application
-    android:allowBackup="true">
+  <application android:allowBackup="true">
     <activity
       android:name="com.eye.cool.permission.PermissionActivity"
-      android:theme="@style/Translate"/>
+      android:exported="false"
+      android:theme="@style/Translate" />
   </application>
 
 </manifest>

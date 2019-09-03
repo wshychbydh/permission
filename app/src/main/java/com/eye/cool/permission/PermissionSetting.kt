@@ -10,7 +10,7 @@ import android.provider.Settings
 /**
  * Created by cool on 2018/4/20.
  */
-class PermissionSetting(private val context: Context) {
+internal class PermissionSetting(private val context: Context) {
 
   fun start() {
     val intent = obtainSettingIntent()
@@ -19,10 +19,7 @@ class PermissionSetting(private val context: Context) {
     } catch (e: Exception) {
       context.startActivity(defaultApi(context))
     }
-
   }
-
-  fun cancel() {}
 
   private fun obtainSettingIntent(): Intent {
     return when {

@@ -12,26 +12,61 @@ import java.util.*
  */
 class PermissionHelper private constructor(private var context: Context) {
 
-  var rationale: Rationale? = null
-  var rationaleSetting: Rationale? = null
-  var callback: ((authorise: Boolean) -> Unit)? = null
-  var permissions: Array<String>? = null
+  private var rationale: Rationale? = null
+  private var rationaleSetting: Rationale? = null
+  private var callback: ((authorise: Boolean) -> Unit)? = null
+  private var permissions: Array<String>? = null
+  private var showSettingWhenDenied = true
 
+  /**
+   * If targetApi or SDK is less than 23,
+   * support checks for [camera | recorder | storage]'s permissions,
+   * and returns true for all other permissions
+   */
   fun request() {
     if (permissions == null || permissions!!.isEmpty()) {
       callback?.invoke(true)
       return
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    val target = context.applicationInfo.targetSdkVersion
+    if (target >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       requestPermission(context)
     } else {
-      callback?.invoke(true)
+      val deniedPermissions = requestPermissionBelow23()
+      if (deniedPermissions.isNotEmpty() && showSettingWhenDenied) {
+        rationaleSetting?.showRationale(context, deniedPermissions.toTypedArray(), null)
+      } else callback?.invoke(deniedPermissions.isEmpty())
     }
+  }
+
+  private fun requestPermissionBelow23(): List<String> {
+    val deniedPermissions = arrayListOf<String>()
+    permissions?.forEach {
+      val available = when (it) {
+        in Permission.CAMERA -> {
+          PermissionUtil.isCameraAvailable()
+        }
+        in Permission.STORAGE -> {
+          PermissionUtil.isCacheDirAvailable(context) && PermissionUtil.isExternalDirAvailable()
+        }
+
+        in Permission.MICROPHONE -> {
+          PermissionUtil.isRecordAvailable()
+        }
+        else -> {
+          //fixme Other permission's checking
+          true
+        }
+      }
+      if (!available) {
+        deniedPermissions.add(it)
+      }
+    }
+    return deniedPermissions
   }
 
   @TargetApi(Build.VERSION_CODES.M)
   private fun requestPermission(context: Context) {
-    //Some permissions need request.
     val checkPermission = getRequestPermission(context, permissions)
     if (checkPermission.isEmpty()) {
       callback?.invoke(true)
@@ -64,19 +99,24 @@ class PermissionHelper private constructor(private var context: Context) {
 
 
   private fun verifyPermissions(permissions: Array<String>, grantResults: IntArray) {
-
     // Verify that each required permissions has been granted, otherwise all granted
-    for (result in grantResults) {
+    val deniedPermissions = arrayListOf<String>()
+    grantResults.forEachIndexed { index, result ->
       if (result != PackageManager.PERMISSION_GRANTED) {
-        if (hasAlwaysDeniedPermission(permissions)) {
-          rationaleSetting?.showRationale(context, permissions, null)
-        } else {
-          callback?.invoke(false)
-        }
-        return
+        deniedPermissions.add(permissions[index])
       }
     }
-    callback?.invoke(true)
+
+    if (deniedPermissions.isNullOrEmpty()) {
+      callback?.invoke(true)
+    } else {
+      val deniedArray = deniedPermissions.toTypedArray()
+      if (showSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
+        rationaleSetting?.showRationale(context, deniedArray, null)
+      } else {
+        callback?.invoke(false)
+      }
+    }
   }
 
   /**
@@ -95,30 +135,21 @@ class PermissionHelper private constructor(private var context: Context) {
     private var rationale: Rationale? = null
     private var rationaleSetting: Rationale? = null
     private var callback: ((authorise: Boolean) -> Unit)? = null
-    private var permissions: Array<String>? = null
+    private var permissions = LinkedHashSet<String>()
+    private var showSettingWhenDenied = true
 
     fun permission(permission: String): Builder {
-      if (permissions.isNullOrEmpty()) {
-        permissions = arrayOf(permission)
-      } else {
-        val dest = Arrays.copyOf(permissions!!, permissions!!.size + 1)
-        dest[dest.size - 1] = permission
-        permissions = dest
-      }
+      permissions.add(permission)
       return this
     }
 
     fun permissions(array: Array<String>): Builder {
-      if (this.permissions.isNullOrEmpty()) {
-        this.permissions = array
-      } else {
-        val size = this.permissions!!.size
-        val dest = Arrays.copyOf(this.permissions!!, size + array.size)
-        array.forEachIndexed { index, s ->
-          dest[size + index] = s
-        }
-        this.permissions = dest
-      }
+      permissions.addAll(array)
+      return this
+    }
+
+    fun showSettingWhenDenied(showSettingWhenDenied: Boolean): Builder {
+      this.showSettingWhenDenied = showSettingWhenDenied
       return this
     }
 
@@ -139,10 +170,11 @@ class PermissionHelper private constructor(private var context: Context) {
 
     fun build(): PermissionHelper {
       val permissionHelper = PermissionHelper(context)
-      permissionHelper.permissions = permissions
+      permissionHelper.permissions = permissions.toTypedArray()
       permissionHelper.callback = callback
       permissionHelper.rationale = rationale ?: DefaultRationale()
       permissionHelper.rationaleSetting = rationaleSetting ?: SettingRationale()
+      permissionHelper.showSettingWhenDenied = showSettingWhenDenied
       return permissionHelper
     }
   }

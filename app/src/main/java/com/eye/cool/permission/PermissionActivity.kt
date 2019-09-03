@@ -16,7 +16,7 @@ import android.view.WindowManager
  * Created cool on 2018/4/16.
  */
 @TargetApi(Build.VERSION_CODES.M)
-class PermissionActivity : Activity() {
+internal class PermissionActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

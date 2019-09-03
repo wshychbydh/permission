@@ -7,13 +7,15 @@ apply plugin: 'com.github.dcendents.android-maven'
 group = 'com.github.wshychbydh'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 28
     defaultConfig {
         minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 5
+        versionName "1.1.0"
     }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
