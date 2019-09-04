@@ -130,7 +130,7 @@ class PermissionHelper private constructor(private var context: Context) {
     private var showRationaleWhenRequest = true
 
     /**
-     * Requested permission is required
+     * @param permission Requested permission is required
      */
     fun permission(permission: String): Builder {
       permissions.add(permission)
@@ -138,31 +138,15 @@ class PermissionHelper private constructor(private var context: Context) {
     }
 
     /**
-     * Requested permissions are required
+     * @param permissions Requested permissions are required
      */
-    fun permissions(array: Array<String>): Builder {
-      permissions.addAll(array)
+    fun permissions(permissions: Array<String>): Builder {
+      this.permissions.addAll(permissions)
       return this
     }
 
     /**
-     * Show Permission dialog when requesting
-     */
-    fun showRationaleWhenRequest(showRationaleWhenRequest: Boolean): Builder {
-      this.showRationaleWhenRequest = showRationaleWhenRequest
-      return this
-    }
-
-    /**
-     * Show Settings dialog when permission denied
-     */
-    fun showRationaleSettingWhenDenied(showSettingWhenDenied: Boolean): Builder {
-      this.showRationaleSettingWhenDenied = showSettingWhenDenied
-      return this
-    }
-
-    /**
-     * Authorization result callback, true was granted all, false otherwise
+     * @param callback Authorization result callback, true was granted all, false otherwise
      */
     fun permissionCallback(callback: ((authorise: Boolean) -> Unit)? = null): Builder {
       this.callback = callback
@@ -170,18 +154,22 @@ class PermissionHelper private constructor(private var context: Context) {
     }
 
     /**
-     * Dialog box that prompts the user for authorization
+     * @param rationale Dialog box that prompts the user for authorization
+     * @param showRationaleWhenRequest Show Permission dialog when requesting, default true
      */
-    fun rationale(rationale: Rationale?): Builder {
+    fun rationale(rationale: Rationale?, showRationaleWhenRequest: Boolean): Builder {
       this.rationale = rationale
+      this.showRationaleWhenRequest = showRationaleWhenRequest
       return this
     }
 
     /**
-     * The Settings dialog box that guides the user to authorize
+     * @param rationaleSetting The Settings dialog box that guides the user to authorize
+     * @param showRationaleSettingWhenDenied Show Settings dialog when permission denied, default true
      */
-    fun rationaleSetting(rationaleSetting: Rationale?): Builder {
+    fun rationaleSetting(rationaleSetting: Rationale?, showRationaleSettingWhenDenied: Boolean = true): Builder {
       this.rationaleSetting = rationaleSetting
+      this.showRationaleSettingWhenDenied = showRationaleSettingWhenDenied
       return this
     }
 
