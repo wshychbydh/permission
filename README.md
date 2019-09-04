@@ -21,6 +21,15 @@
     }
 ```
 
+**注**：如果编译的时候报重复的'META-INF/app_release.kotlin_module'时，在app的build.gradle文件的android下添加
+```
+    packagingOptions {
+        exclude 'META-INF/app_release.kotlin_module'
+    }
+```
+报其他类似的重复错误时，添加方式同上。
+
+
 3、通过PermissionHelper.Builder创建实例。
 
 4、设置相应参数，如需要申请的permissions，自定义弹框rationale等。
