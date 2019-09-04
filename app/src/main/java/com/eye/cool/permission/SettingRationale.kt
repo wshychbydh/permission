@@ -29,8 +29,7 @@ internal class SettingRationale : Rationale {
   }
 
   private fun getAppName(context: Context): String {
-    val applicationInfo = context.packageManager
-        .getApplicationInfo(context.packageName, 0) ?: return ""
-    return context.packageManager.getApplicationLabel(applicationInfo) as? String ?: ""
+    val appInfo = context.packageManager.getApplicationInfo(context.packageName, 0) ?: return ""
+    return context.packageManager.getApplicationLabel(appInfo) as? String ?: ""
   }
 }

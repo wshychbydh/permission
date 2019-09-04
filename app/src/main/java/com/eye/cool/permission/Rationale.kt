@@ -13,8 +13,9 @@ interface Rationale {
    * @param context     context.
    * @param permissions show rationale permissions.
    */
-  fun showRationale(context: Context,
-                    permissions: Array<String>,
-                    callback: ((result: Boolean) -> Unit)? = null
+  fun showRationale(
+      context: Context,
+      permissions: Array<String>,
+      callback: ((result: Boolean) -> Unit)? = null
   )
 }

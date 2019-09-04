@@ -16,7 +16,8 @@ class PermissionHelper private constructor(private var context: Context) {
   private var rationaleSetting: Rationale? = null
   private var callback: ((authorise: Boolean) -> Unit)? = null
   private var permissions: Array<String>? = null
-  private var showSettingWhenDenied = true
+  private var showRationaleSettingWhenDenied = true
+  private var showRationaleWhenRequest = true
 
   /**
    * If targetApi or SDK is less than 23,
@@ -33,7 +34,7 @@ class PermissionHelper private constructor(private var context: Context) {
       requestPermission(context)
     } else {
       val deniedPermissions = requestPermissionBelow23()
-      if (deniedPermissions.isNotEmpty() && showSettingWhenDenied) {
+      if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
         rationaleSetting?.showRationale(context, deniedPermissions.toTypedArray(), null)
       } else callback?.invoke(deniedPermissions.isEmpty())
     }
@@ -67,36 +68,25 @@ class PermissionHelper private constructor(private var context: Context) {
 
   @TargetApi(Build.VERSION_CODES.M)
   private fun requestPermission(context: Context) {
-    val checkPermission = getRequestPermission(context, permissions)
-    if (checkPermission.isEmpty()) {
-      callback?.invoke(true)
-    } else {
-      var showRationale = false
-      checkPermission.forEach {
-        showRationale = showRationale || isNeedShowRationalePermission(context, it)
-      }
-      if (showRationale) {
-        rationale?.showRationale(context, checkPermission) {
-          if (it) {
-            PermissionActivity.requestPermission(
-                context,
-                permissions!!
-            ) { requestPermissions, grantResults ->
-              verifyPermissions(requestPermissions, grantResults)
-            }
-          } else {
-            callback?.invoke(false)
-          }
-        }
-
-      } else {
-        PermissionActivity.requestPermission(context, permissions!!) { requestPermissions, grantResults ->
-          verifyPermissions(requestPermissions, grantResults)
+    val deniedPermissions = getDeniedPermissions(context, permissions)
+    when {
+      deniedPermissions.isEmpty() -> callback?.invoke(true)
+      showRationaleWhenRequest -> rationale?.showRationale(context, deniedPermissions) {
+        if (it) {
+          requestPermission(deniedPermissions)
+        } else {
+          callback?.invoke(false)
         }
       }
+      else -> requestPermission(deniedPermissions)
     }
   }
 
+  private fun requestPermission(permissions: Array<String>) {
+    PermissionActivity.requestPermission(context, permissions) { requestPermissions, grantResults ->
+      verifyPermissions(requestPermissions, grantResults)
+    }
+  }
 
   private fun verifyPermissions(permissions: Array<String>, grantResults: IntArray) {
     // Verify that each required permissions has been granted, otherwise all granted
@@ -111,7 +101,7 @@ class PermissionHelper private constructor(private var context: Context) {
       callback?.invoke(true)
     } else {
       val deniedArray = deniedPermissions.toTypedArray()
-      if (showSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
+      if (showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
         rationaleSetting?.showRationale(context, deniedArray, null)
       } else {
         callback?.invoke(false)
@@ -136,33 +126,60 @@ class PermissionHelper private constructor(private var context: Context) {
     private var rationaleSetting: Rationale? = null
     private var callback: ((authorise: Boolean) -> Unit)? = null
     private var permissions = LinkedHashSet<String>()
-    private var showSettingWhenDenied = true
+    private var showRationaleSettingWhenDenied = true
+    private var showRationaleWhenRequest = true
 
+    /**
+     * Requested permission is required
+     */
     fun permission(permission: String): Builder {
       permissions.add(permission)
       return this
     }
 
+    /**
+     * Requested permissions are required
+     */
     fun permissions(array: Array<String>): Builder {
       permissions.addAll(array)
       return this
     }
 
-    fun showSettingWhenDenied(showSettingWhenDenied: Boolean): Builder {
-      this.showSettingWhenDenied = showSettingWhenDenied
+    /**
+     * Show Permission dialog when requesting
+     */
+    fun showRationaleWhenRequest(showRationaleWhenRequest: Boolean): Builder {
+      this.showRationaleWhenRequest = showRationaleWhenRequest
       return this
     }
 
+    /**
+     * Show Settings dialog when permission denied
+     */
+    fun showRationaleSettingWhenDenied(showSettingWhenDenied: Boolean): Builder {
+      this.showRationaleSettingWhenDenied = showSettingWhenDenied
+      return this
+    }
+
+    /**
+     * Authorization result callback, true was granted all, false otherwise
+     */
     fun permissionCallback(callback: ((authorise: Boolean) -> Unit)? = null): Builder {
       this.callback = callback
       return this
     }
 
+    /**
+     * Dialog box that prompts the user for authorization
+     */
     fun rationale(rationale: Rationale?): Builder {
       this.rationale = rationale
       return this
     }
 
+    /**
+     * The Settings dialog box that guides the user to authorize
+     */
     fun rationaleSetting(rationaleSetting: Rationale?): Builder {
       this.rationaleSetting = rationaleSetting
       return this
@@ -174,7 +191,8 @@ class PermissionHelper private constructor(private var context: Context) {
       permissionHelper.callback = callback
       permissionHelper.rationale = rationale ?: DefaultRationale()
       permissionHelper.rationaleSetting = rationaleSetting ?: SettingRationale()
-      permissionHelper.showSettingWhenDenied = showSettingWhenDenied
+      permissionHelper.showRationaleSettingWhenDenied = showRationaleSettingWhenDenied
+      permissionHelper.showRationaleWhenRequest = showRationaleWhenRequest
       return permissionHelper
     }
   }
@@ -195,7 +213,7 @@ class PermissionHelper private constructor(private var context: Context) {
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private fun getRequestPermission(context: Context, permissions: Array<String>?): Array<String> {
+    private fun getDeniedPermissions(context: Context, permissions: Array<String>?): Array<String> {
       val requestList = mutableListOf<String>()
       permissions?.forEach {
         if (context.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED) {
