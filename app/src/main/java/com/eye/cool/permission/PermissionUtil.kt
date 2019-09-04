@@ -20,13 +20,16 @@ object PermissionUtil {
     var camera: Camera? = null
     return try {
       camera = Camera.open()
-      // setParameters is Used for meizu MX5.
+      // setParameters is Used for MeiZu MX5.
       camera!!.parameters = camera!!.parameters
       true
     } catch (e: Exception) {
       false
     } finally {
-      camera?.release()
+      try {
+        camera?.release()
+      } catch (ignore: Exception) {
+      }
     }
   }
 
