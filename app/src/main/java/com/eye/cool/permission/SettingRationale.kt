@@ -23,8 +23,11 @@ internal class SettingRationale : Rationale {
         .setCancelable(false)
         .setTitle(R.string.permission_title_rationale)
         .setMessage(message)
-        .setPositiveButton(R.string.permission_setting) { _, _ -> PermissionSetting(context).start() }
-        .setNegativeButton(R.string.permission_no) { _, _ -> }
+        .setPositiveButton(R.string.permission_setting) { _, _ ->
+          PermissionSetting(context).start()
+          callback?.invoke(true)
+        }
+        .setNegativeButton(R.string.permission_no) { _, _ -> callback?.invoke(false) }
         .show()
   }
 

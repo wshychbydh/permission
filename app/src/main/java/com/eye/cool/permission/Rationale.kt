@@ -12,6 +12,7 @@ interface Rationale {
    *
    * @param context     context.
    * @param permissions show rationale permissions.
+   * @param callback result, Only means which button was clicked
    */
   fun showRationale(
       context: Context,

@@ -14,7 +14,8 @@ class PermissionHelper private constructor(private var context: Context) {
 
   private var rationale: Rationale? = null
   private var rationaleSetting: Rationale? = null
-  private var callback: ((authorise: Boolean) -> Unit)? = null
+   private var callback: ((authorise: Boolean) -> Unit)? = null
+  private var authoriseCallback: ((authorise: Int) -> Unit)? = null
   private var permissions: Array<String>? = null
   private var showRationaleSettingWhenDenied = true
   private var showRationaleWhenRequest = true
@@ -27,6 +28,7 @@ class PermissionHelper private constructor(private var context: Context) {
   fun request() {
     if (permissions == null || permissions!!.isEmpty()) {
       callback?.invoke(true)
+      authoriseCallback?.invoke(AuthoriseType.TYPE_GRANTED)
       return
     }
     val target = context.applicationInfo.targetSdkVersion
@@ -36,7 +38,11 @@ class PermissionHelper private constructor(private var context: Context) {
       val deniedPermissions = requestPermissionBelow23()
       if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
         rationaleSetting?.showRationale(context, deniedPermissions.toTypedArray(), null)
-      } else callback?.invoke(deniedPermissions.isEmpty())
+      } else {
+        val granted = deniedPermissions.isEmpty()
+        callback?.invoke(granted)
+        authoriseCallback?.invoke(if (granted) AuthoriseType.TYPE_GRANTED else AuthoriseType.TYPE_DENIED)
+      }
     }
   }
 
@@ -70,12 +76,16 @@ class PermissionHelper private constructor(private var context: Context) {
   private fun requestPermission(context: Context) {
     val deniedPermissions = getDeniedPermissions(context, permissions)
     when {
-      deniedPermissions.isEmpty() -> callback?.invoke(true)
+      deniedPermissions.isEmpty() -> {
+        callback?.invoke(true)
+        authoriseCallback?.invoke(AuthoriseType.TYPE_GRANTED)
+      }
       showRationaleWhenRequest -> rationale?.showRationale(context, deniedPermissions) {
         if (it) {
           requestPermission(deniedPermissions)
         } else {
           callback?.invoke(false)
+          authoriseCallback?.invoke(AuthoriseType.TYPE_DENIED)
         }
       }
       else -> requestPermission(deniedPermissions)
@@ -99,12 +109,17 @@ class PermissionHelper private constructor(private var context: Context) {
 
     if (deniedPermissions.isNullOrEmpty()) {
       callback?.invoke(true)
+      authoriseCallback?.invoke(AuthoriseType.TYPE_GRANTED)
     } else {
       val deniedArray = deniedPermissions.toTypedArray()
       if (showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
-        rationaleSetting?.showRationale(context, deniedArray, null)
+        callback?.invoke(false)
+        rationaleSetting?.showRationale(context, deniedArray) {
+          authoriseCallback?.invoke(if (it) AuthoriseType.TYPE_SETTING_ALLOW else AuthoriseType.TYPE_SETTING_CANCELED)
+        }
       } else {
         callback?.invoke(false)
+        authoriseCallback?.invoke(AuthoriseType.TYPE_DENIED)
       }
     }
   }
@@ -125,6 +140,7 @@ class PermissionHelper private constructor(private var context: Context) {
     private var rationale: Rationale? = null
     private var rationaleSetting: Rationale? = null
     private var callback: ((authorise: Boolean) -> Unit)? = null
+    private var authoriseCallback: ((authorise: Int) -> Unit)? = null
     private var permissions = LinkedHashSet<String>()
     private var showRationaleSettingWhenDenied = true
     private var showRationaleWhenRequest = true
@@ -150,6 +166,14 @@ class PermissionHelper private constructor(private var context: Context) {
      */
     fun permissionCallback(callback: ((authorise: Boolean) -> Unit)? = null): Builder {
       this.callback = callback
+      return this
+    }
+
+    /**
+     * @param callback Authorization result callback, true was granted all, false otherwise
+     */
+    fun permissionAuthoriseCallback(authoriseCallback: ((authorise: Int) -> Unit)? = null): Builder {
+      this.authoriseCallback = authoriseCallback
       return this
     }
 

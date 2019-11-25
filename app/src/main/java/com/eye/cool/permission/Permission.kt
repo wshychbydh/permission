@@ -160,6 +160,17 @@ object Permission {
             textList.add(message)
           }
         }
+        INSTALL_PACKAGES, REQUEST_INSTALL_PACKAGES -> {
+          val message = context.getString(R.string.permission_name_install)
+          if (!textList.contains(message)) {
+            textList.add(message)
+          }
+        }
+        else -> {
+          // fixme un known permission name
+          if (textList.contains(permission))
+            textList.add(permission)
+        }
       }
     }
     return textList

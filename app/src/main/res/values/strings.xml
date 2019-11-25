@@ -1,4 +1,5 @@
 <resources>
+  <string name="permission_name_install">Install Apk</string>
   <string name="permission_name_calendar">Calendar</string>
   <string name="permission_name_camera">Camera</string>
   <string name="permission_name_contacts">Contacts</string>
