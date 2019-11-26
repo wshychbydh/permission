@@ -20,7 +20,7 @@ class PermissionHelper private constructor(private var context: Context) {
   private var authoriseCallback: ((authorise: Int) -> Unit)? = null
   private var permissions: Array<String>? = null
   private var showRationaleSettingWhenDenied = true
-  private var showRationaleWhenRequest = true
+  private var showRationaleWhenRequest = false
   private var deniedPermissionCallback: ((Array<String>) -> Unit)? = null
 
   /**
@@ -164,7 +164,7 @@ class PermissionHelper private constructor(private var context: Context) {
     private var authoriseCallback: ((authorise: Int) -> Unit)? = null
     private var permissions = LinkedHashSet<String>()
     private var showRationaleSettingWhenDenied = true
-    private var showRationaleWhenRequest = true
+    private var showRationaleWhenRequest = false
     private var deniedPermissionCallback: ((Array<String>) -> Unit)? = null
 
     /**
