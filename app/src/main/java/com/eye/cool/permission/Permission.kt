@@ -104,6 +104,11 @@ object Permission {
   fun transformText(context: Context, permissions: List<String>): List<String> {
     val textList = ArrayList<String>()
     for (permission in permissions) {
+      val result = translates[permission]
+      if (!result.isNullOrEmpty()) {
+        textList.add(result)
+        continue
+      }
       when (permission) {
         READ_CALENDAR, WRITE_CALENDAR -> {
           val message = context.getString(R.string.permission_name_calendar)
@@ -111,7 +116,6 @@ object Permission {
             textList.add(message)
           }
         }
-
         android.Manifest.permission.CAMERA -> {
           val message = context.getString(R.string.permission_name_camera)
           if (!textList.contains(message)) {
@@ -185,5 +189,34 @@ object Permission {
     val builder = StrictMode.VmPolicy.Builder()
     StrictMode.setVmPolicy(builder.build())
     builder.detectFileUriExposure()
+  }
+
+  private val translates = hashMapOf<String, String>()
+
+  /**
+   * Add permission translation dynamically, highest priority-first
+   * @param permission the permission will be translated
+   * @param translate the display text to user
+   */
+  fun addTranslateText(permission: String, translate: String): Permission {
+    translates[permission] = translate
+    return this
+  }
+
+  /**
+   * Remove permission translation, Only remove dynamically added ones
+   * @param permission the permission's translate will be removed
+   */
+  fun removeTranslateText(permission: String): Permission {
+    translates.remove(permission)
+    return this
+  }
+
+  /**
+   * Remove all dynamically permissions
+   */
+  fun clearText(): Permission {
+    translates.clear()
+    return this
   }
 }

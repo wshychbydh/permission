@@ -14,7 +14,7 @@ class PermissionHelper private constructor(private var context: Context) {
 
   private var rationale: Rationale? = null
   private var rationaleSetting: Rationale? = null
-   private var callback: ((authorise: Boolean) -> Unit)? = null
+  private var callback: ((authorise: Boolean) -> Unit)? = null
   private var authoriseCallback: ((authorise: Int) -> Unit)? = null
   private var permissions: Array<String>? = null
   private var showRationaleSettingWhenDenied = true
