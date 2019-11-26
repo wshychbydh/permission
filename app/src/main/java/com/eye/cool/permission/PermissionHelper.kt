@@ -1,5 +1,6 @@
 package com.eye.cool.permission
 
+import android.Manifest.permission.WRITE_VOICEMAIL
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.pm.PackageManager
@@ -14,11 +15,13 @@ class PermissionHelper private constructor(private var context: Context) {
 
   private var rationale: Rationale? = null
   private var rationaleSetting: Rationale? = null
+  private var rationaleInstallPackagesSetting: Rationale? = null
   private var callback: ((authorise: Boolean) -> Unit)? = null
   private var authoriseCallback: ((authorise: Int) -> Unit)? = null
   private var permissions: Array<String>? = null
   private var showRationaleSettingWhenDenied = true
   private var showRationaleWhenRequest = true
+  private var deniedPermissionCallback: ((Array<String>) -> Unit)? = null
 
   /**
    * If targetApi or SDK is less than 23,
@@ -39,9 +42,12 @@ class PermissionHelper private constructor(private var context: Context) {
       if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
         rationaleSetting?.showRationale(context, deniedPermissions.toTypedArray(), null)
       } else {
-        val granted = deniedPermissions.isEmpty()
-        callback?.invoke(granted)
-        authoriseCallback?.invoke(if (granted) AuthoriseType.TYPE_GRANTED else AuthoriseType.TYPE_DENIED)
+        val hasDeniedPermissions = deniedPermissions.isNotEmpty()
+        if (hasDeniedPermissions) {
+          deniedPermissionCallback?.invoke(deniedPermissions.toTypedArray())
+        }
+        callback?.invoke(!hasDeniedPermissions)
+        authoriseCallback?.invoke(if (hasDeniedPermissions) AuthoriseType.TYPE_DENIED else AuthoriseType.TYPE_GRANTED)
       }
     }
   }
@@ -84,6 +90,7 @@ class PermissionHelper private constructor(private var context: Context) {
         if (it) {
           requestPermission(deniedPermissions)
         } else {
+          deniedPermissionCallback?.invoke(deniedPermissions)
           callback?.invoke(false)
           authoriseCallback?.invoke(AuthoriseType.TYPE_DENIED)
         }
@@ -113,11 +120,24 @@ class PermissionHelper private constructor(private var context: Context) {
     } else {
       val deniedArray = deniedPermissions.toTypedArray()
       if (showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
-        callback?.invoke(false)
-        rationaleSetting?.showRationale(context, deniedArray) {
-          authoriseCallback?.invoke(if (it) AuthoriseType.TYPE_SETTING_ALLOW else AuthoriseType.TYPE_SETTING_CANCELED)
+        if (deniedArray.size == 1 && deniedArray[0] == android.Manifest.permission.REQUEST_INSTALL_PACKAGES) {
+          val installPermission = arrayOf(android.Manifest.permission.REQUEST_INSTALL_PACKAGES)
+          rationaleInstallPackagesSetting?.showRationale(context, installPermission) {
+            if (!it) {
+              deniedPermissionCallback?.invoke(installPermission)
+            }
+            callback?.invoke(it)
+            authoriseCallback?.invoke(if (it) AuthoriseType.TYPE_SETTING_ALLOW else AuthoriseType.TYPE_SETTING_CANCELED)
+          }
+        } else {
+          deniedPermissionCallback?.invoke(deniedArray)
+          callback?.invoke(false)
+          rationaleSetting?.showRationale(context, deniedArray) {
+            authoriseCallback?.invoke(if (it) AuthoriseType.TYPE_SETTING_ALLOW else AuthoriseType.TYPE_SETTING_CANCELED)
+          }
         }
       } else {
+        deniedPermissionCallback?.invoke(deniedArray)
         callback?.invoke(false)
         authoriseCallback?.invoke(AuthoriseType.TYPE_DENIED)
       }
@@ -139,16 +159,19 @@ class PermissionHelper private constructor(private var context: Context) {
   class Builder(private var context: Context) {
     private var rationale: Rationale? = null
     private var rationaleSetting: Rationale? = null
+    private var rationaleInstallPackagesSetting: Rationale? = null
     private var callback: ((authorise: Boolean) -> Unit)? = null
     private var authoriseCallback: ((authorise: Int) -> Unit)? = null
     private var permissions = LinkedHashSet<String>()
     private var showRationaleSettingWhenDenied = true
     private var showRationaleWhenRequest = true
+    private var deniedPermissionCallback: ((Array<String>) -> Unit)? = null
 
     /**
      * @param permission Requested permission is required
      */
     fun permission(permission: String): Builder {
+      if (!permission.startsWith("android.permission") || permission != WRITE_VOICEMAIL) return this
       permissions.add(permission)
       return this
     }
@@ -157,7 +180,17 @@ class PermissionHelper private constructor(private var context: Context) {
      * @param permissions Requested permissions are required
      */
     fun permissions(permissions: Array<String>): Builder {
-      this.permissions.addAll(permissions)
+      val filtered = permissions.filter { it.startsWith("android.permission") || it == WRITE_VOICEMAIL }
+      this.permissions.addAll(filtered)
+      return this
+    }
+
+    /**
+     * @param permissions Requested permissions are required
+     */
+    fun permissions(permissions: Collection<String>): Builder {
+      val filtered = permissions.filter { it.startsWith("android.permission") || it == WRITE_VOICEMAIL }
+      this.permissions.addAll(filtered)
       return this
     }
 
@@ -174,6 +207,15 @@ class PermissionHelper private constructor(private var context: Context) {
      */
     fun permissionAuthoriseCallback(authoriseCallback: ((authorise: Int) -> Unit)? = null): Builder {
       this.authoriseCallback = authoriseCallback
+      return this
+    }
+
+    /**
+     * The denied permission is returned through this callback
+     * @param callback Returns permission to reject
+     */
+    fun deniedPermissionCallback(callback: ((Array<String>) -> Unit)? = null): Builder {
+      this.deniedPermissionCallback = callback
       return this
     }
 
@@ -197,14 +239,29 @@ class PermissionHelper private constructor(private var context: Context) {
       return this
     }
 
+    /**
+     * It will only pop up when you request the permission of 'android.Manifest.permission.REQUEST_INSTALL_PACKAGES'
+     *
+     * @param rationaleInstallPackagesSetting The Settings dialog box that guides the user to authorize
+     * @param showRationaleSettingWhenDenied Show Settings dialog when permission denied, default true
+     */
+    fun rationaleInstallPackagesSetting(rationaleInstallPackagesSetting: Rationale?, showRationaleSettingWhenDenied: Boolean = true): Builder {
+      this.rationaleInstallPackagesSetting = rationaleInstallPackagesSetting
+      this.showRationaleSettingWhenDenied = showRationaleSettingWhenDenied
+      return this
+    }
+
     fun build(): PermissionHelper {
       val permissionHelper = PermissionHelper(context)
       permissionHelper.permissions = permissions.toTypedArray()
       permissionHelper.callback = callback
       permissionHelper.rationale = rationale ?: DefaultRationale()
       permissionHelper.rationaleSetting = rationaleSetting ?: SettingRationale()
+      permissionHelper.rationaleInstallPackagesSetting = rationaleInstallPackagesSetting
+          ?: InstallPackagesSettingRationale()
       permissionHelper.showRationaleSettingWhenDenied = showRationaleSettingWhenDenied
       permissionHelper.showRationaleWhenRequest = showRationaleWhenRequest
+      permissionHelper.deniedPermissionCallback = deniedPermissionCallback
       return permissionHelper
     }
   }

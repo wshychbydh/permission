@@ -20,6 +20,7 @@
   <string name="permission_title_rationale">提示</string>
   <string name="permission_rationale">授予以下权限以继续该程序:\n\n%1$s</string>
   <string name="permission_setting_rationale">“%1$s”需要这些权限，以便更好的服务，请在设置中授权:\n\n%2$s</string>
+  <string name="permission_install_packages_setting_rationale">“%1$s”版本升级需要权限，请授权允许安装未知来源应用!</string>
   <string name="permission_take_photos">请授予拍照权限</string>
   <string name="permission_storage">请授予访问存储权限</string>
   <string name="permission_take_photo">拍照</string>

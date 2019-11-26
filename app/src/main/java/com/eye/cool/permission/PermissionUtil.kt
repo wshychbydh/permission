@@ -1,11 +1,13 @@
 package com.eye.cool.permission
 
+import android.annotation.TargetApi
 import android.content.Context
 import android.hardware.Camera
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.os.Environment
+import android.os.StrictMode
 
 /**
  *Created by ycb on 2019/9/3 0003
@@ -88,5 +90,17 @@ object PermissionUtil {
   @JvmStatic
   fun openPermissionSetting(context: Context) {
     PermissionSetting(context).start()
+  }
+
+
+  /**
+   * Resolve file uri access issues for 7.0 and above
+   * Call in application's onCreate. not recommend!
+   */
+  @TargetApi(18)
+  fun detectFileUriExposure() {
+    val builder = StrictMode.VmPolicy.Builder()
+    StrictMode.setVmPolicy(builder.build())
+    builder.detectFileUriExposure()
   }
 }

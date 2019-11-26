@@ -5,8 +5,10 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -28,8 +30,14 @@ internal class PermissionActivity : Activity() {
     if (permissions != null && permissions.isNotEmpty()) {
       requestPermissions(permissions, 1)
     } else {
-      sPermissionListener = null
-      finish()
+      val requestInstallPackages = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
+      if (requestInstallPackages) {
+        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
+        startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
+      } else {
+        sPermissionListener = null
+        finish()
+      }
     }
   }
 
@@ -43,11 +51,39 @@ internal class PermissionActivity : Activity() {
     return keyCode == KeyEvent.KEYCODE_BACK || super.onKeyDown(keyCode, event)
   }
 
+  override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    if (requestCode == REQUEST_INSTALL_PACKAGES_CODE && resultCode == RESULT_OK) {
+      sRequestInstallPackageListener?.invoke(true)
+    } else {
+      sRequestInstallPackageListener?.invoke(false)
+    }
+    finish()
+  }
+
+  override fun onDestroy() {
+    super.onDestroy()
+    sPermissionListener = null
+    sRequestInstallPackageListener = null
+  }
+
   companion object {
 
-    private const val REQUEST_PERMISSIONS = "PERMISSIONS"
+    private const val REQUEST_PERMISSIONS = "permission"
+    private const val REQUEST_INSTALL_PACKAGES = "request_install_package"
+    private const val REQUEST_INSTALL_PACKAGES_CODE = 7001
 
     private var sPermissionListener: ((permissions: Array<String>, grantResults: IntArray) -> Unit)? = null
+    private var sRequestInstallPackageListener: ((Boolean) -> Unit)? = null
+
+    @TargetApi(Build.VERSION_CODES.O)
+    fun requestInstallPackages(context: Context, callback: ((Boolean) -> Unit)? = null) {
+      this.sRequestInstallPackageListener = callback
+      val intent = Intent(context, PermissionActivity::class.java)
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+      intent.putExtra(REQUEST_INSTALL_PACKAGES, true)
+      context.startActivity(intent)
+    }
 
     /**
      * Request for permissions.

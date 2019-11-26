@@ -7,7 +7,7 @@
       android:name="com.eye.cool.permission.PermissionActivity"
       android:exported="false"
       android:launchMode="singleInstance"
-      android:theme="@style/Translate" />
+      android:theme="@style/PermissionTranslate" />
   </application>
 
 </manifest>

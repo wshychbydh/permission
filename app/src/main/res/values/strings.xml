@@ -19,6 +19,7 @@
   <string name="permission_title_rationale">tips</string>
   <string name="permission_rationale">Grant the following permissions to continue the program:\n\n%1$s</string>
   <string name="permission_setting_rationale">“%1$s” need these permissions, please authorize in Settings:\n\n%2$s</string>
+  <string name="permission_install_packages_setting_rationale">“%1$s” version upgrade requires permission, please authorize the installation of unknown source applications</string>
   <string name="permission_take_photos">Please grant permission to take photos</string>
   <string name="permission_storage">Grant access to the storage</string>
   <string name="permission_take_photo">Photos</string>

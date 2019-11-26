@@ -1,9 +1,7 @@
 package com.eye.cool.permission
 
 import android.Manifest.permission.*
-import android.annotation.TargetApi
 import android.content.Context
-import android.os.StrictMode
 import java.util.*
 
 /**
@@ -172,23 +170,12 @@ object Permission {
         }
         else -> {
           // fixme un known permission name
-          if (textList.contains(permission))
-            textList.add(permission)
+          if (!textList.contains(permission))
+            textList.add(permission.substring(permission.lastIndexOf(".") + 1, permission.length))
         }
       }
     }
     return textList
-  }
-
-  /**
-   * Resolve file uri access issues for 7.0 and above
-   * Call in application's onCreate. not recommend!
-   */
-  @TargetApi(18)
-  fun detectFileUriExposure() {
-    val builder = StrictMode.VmPolicy.Builder()
-    StrictMode.setVmPolicy(builder.build())
-    builder.detectFileUriExposure()
   }
 
   private val translates = hashMapOf<String, String>()
