@@ -16,7 +16,7 @@
 
 6、可自定义引导权限弹框及设置弹框
 
-7、可自定义引导权限提示内容
+7、可自定义引导权限提示语
 
 ### 使用方法：
 
@@ -53,11 +53,11 @@
 
 4、设置相应参数，如需要申请的permissions，自定义弹框rationale等。
 
-5、设置权限回调permissionCallback (必填，否则无回调)。
+5、设置权限回调permissionCallback或permissionAuthoriseCallback(二选一，否则无回调)。
 
 6、若sdk或targetApi小于23时，只会判断拍照/录音/存储权限，其他权限根据是否在Manifest中配置自动返回
 
-7、添加/移除自定义权限提示内容：
+7、添加/移除自定义权限提示语：
 
 ```
     Permission.addTranslateText(permission, translate)     //动态添加权限(permission)对应的提示语(translate)
@@ -98,7 +98,10 @@
          .request()
 ```
 
-**注**：permissionCallback和permissionAuthoriseCallback会在同时回调，按需设置其一即可；deniedPermissionCallback仅在授权失败时回调。
+**注**：
+1)、permissionCallback和permissionAuthoriseCallback会同时回调，按需设置其一即可
+2)、deniedPermissionCallback仅在授权失败时回调。
+
 
 #### 联系方式 wshychbydh@gmail.com
 
