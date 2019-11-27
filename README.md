@@ -10,7 +10,7 @@
 
 3、适配targetApi小于23时文件、照相机、录音权限
 
-4、权限组整合，可按组请求权限，分组见**Permission**
+4、权限组整合，可按组请求权限，详细分组见 **Permission**
 
 5、适配8.0以上安装包权限
 
@@ -33,7 +33,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:permission:1.1.1'
+        implementation 'com.github.wshychbydh:permission:1.1.2'
     }
 ```
 
@@ -51,13 +51,13 @@
 
 3、通过PermissionHelper.Builder创建实例。
 
-4、设置相应参数，如需要申请的permissions，自定义弹框rationale等。
+4、设置相应参数，如需要申请的permissions，自定义弹框rationale等，详细见示例。
 
-5、设置权限回调permissionCallback或permissionAuthoriseCallback(二选一，否则无回调)。
+5、设置权限回调permissionCallback，若不设置将无法接受到授权结果回调
 
 6、若sdk或targetApi小于23时，只会判断拍照/录音/存储权限，其他权限根据是否在Manifest中配置自动返回
 
-7、添加/移除自定义权限提示语：
+7、添加/移除自定义权限提示语：（自定义提示语优先级高于默认提示语）
 
 ```
     Permission.addTranslateText(permission, translate)     //动态添加权限(permission)对应的提示语(translate)
@@ -76,15 +76,7 @@
          .rationaleInstallPackagesSetting(rationale)   //引导设置安装未知来源应用弹框（可选）
          .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
          .showRationaleWhenRequest(boolean)            //是否弹框提示需要申请的权限（默认false）
-         .permissionAuthoriseCallback{                 //用于需要判断用户具体操作 （可选）
-            if (it) {
-                AuthoriseType.TYPE_GRANTED ->           //请求权限成功
-                AuthoriseType.TYPE_DENIED ->            //请求权限失败
-                AuthoriseType.TYPE_SETTING_CANCELED ->  //请求权限失败，引导设置点击取消
-                AuthoriseType.TYPE_SETTING_ALLOW ->     //请求权限失败，引导设置点击设置（不能判断是否设置了对应权限，安装未知来源应用除外）
-            }
-         }
-         .permissionCallback {                          //授权结果回调（可选）
+         .permissionCallback {                          //授权结果回调（必填，否则无回调）
            if (it) {
              // 请求权限成功
            } else {
@@ -97,10 +89,8 @@
          .build()
          .request()
 ```
+**注**：有且仅有请求安装包权限时，才会弹出引导授权安装包提示框
 
-**注**：
-1)、permissionCallback和permissionAuthoriseCallback会同时回调，按需设置其一即可
-2)、deniedPermissionCallback仅在授权失败时回调。
 
 
 #### 联系方式 wshychbydh@gmail.com

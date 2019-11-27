@@ -7,6 +7,7 @@
   <string name="permission_name_location">读取位置信息</string>
   <string name="permission_name_microphone">扩音器</string>
   <string name="permission_name_phone">拨打电话</string>
+  <string name="permission_name_call_log">访问通话记录</string>
   <string name="permission_name_sensors">传感器</string>
   <string name="permission_name_sms">发送短信</string>
   <string name="permission_name_storage">读取、写入或删除存储空间</string>

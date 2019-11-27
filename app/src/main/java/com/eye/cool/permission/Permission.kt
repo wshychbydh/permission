@@ -138,8 +138,14 @@ object Permission {
             textList.add(message)
           }
         }
-        READ_PHONE_STATE, CALL_PHONE, READ_CALL_LOG, WRITE_CALL_LOG, USE_SIP, PROCESS_OUTGOING_CALLS -> {
+        READ_PHONE_STATE, CALL_PHONE, USE_SIP -> {
           val message = context.getString(R.string.permission_name_phone)
+          if (!textList.contains(message)) {
+            textList.add(message)
+          }
+        }
+        READ_CALL_LOG, WRITE_CALL_LOG, PROCESS_OUTGOING_CALLS -> {
+          val message = context.getString(R.string.permission_name_call_log)
           if (!textList.contains(message)) {
             textList.add(message)
           }
