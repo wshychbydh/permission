@@ -89,7 +89,11 @@
          .build()
          .request()
 ```
-**注**：有且仅有请求安装包权限时，才会弹出引导授权安装包提示框
+**注**：
+
+1、有且仅有android.permission.REQUEST_INSTALL_PACKAGES时，才会弹出引导授权安装包提示框
+
+2、所有运行时权限都必须在Manifest中声明，否则一律返回false
 
 
 
