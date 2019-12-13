@@ -8,10 +8,14 @@ group = 'com.github.wshychbydh'
 android {
     compileSdkVersion 28
     defaultConfig {
-        minSdkVersion 14
+        minSdkVersion 8
         targetSdkVersion 28
         versionCode 6
         versionName "1.1.1"
+    }
+
+    lintOptions {
+        ignoreWarnings true
     }
 }
 
