@@ -1,8 +1,10 @@
-package com.eye.cool.permission
+package com.eye.cool.permission.rationale
 
 import android.app.AlertDialog
 import android.content.Context
 import android.text.TextUtils
+import com.eye.cool.permission.R
+import com.eye.cool.permission.support.Permission
 
 /**
  * Created by cool on 2018/4/20.
@@ -24,10 +26,11 @@ internal class SettingRationale : Rationale {
         .setTitle(R.string.permission_title_rationale)
         .setMessage(message)
         .setPositiveButton(R.string.permission_setting) { _, _ ->
-          PermissionSetting(context).start()
           callback?.invoke(true)
         }
-        .setNegativeButton(R.string.permission_no) { _, _ -> callback?.invoke(false) }
+        .setNegativeButton(R.string.permission_no) { _, _ ->
+          callback?.invoke(false)
+        }
         .show()
   }
 

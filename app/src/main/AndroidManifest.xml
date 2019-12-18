@@ -4,7 +4,13 @@
 
   <application android:allowBackup="true">
     <activity
-      android:name="com.eye.cool.permission.PermissionActivity"
+      android:name=".request.PermissionActivity"
+      android:exported="false"
+      android:launchMode="singleInstance"
+      android:theme="@style/PermissionTranslate" />
+
+    <activity
+      android:name=".request.PermissionSettingActivity"
       android:exported="false"
       android:launchMode="singleInstance"
       android:theme="@style/PermissionTranslate" />

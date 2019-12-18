@@ -1,23 +1,33 @@
 package com.eye.cool.permission
 
-import android.Manifest.permission.WRITE_VOICEMAIL
+import android.Manifest.permission.INSTALL_PACKAGES
+import android.Manifest.permission.REQUEST_INSTALL_PACKAGES
 import android.annotation.TargetApi
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.fragment.app.Fragment
+import com.eye.cool.permission.rationale.DefaultRationale
+import com.eye.cool.permission.rationale.InstallPackagesSettingRationale
+import com.eye.cool.permission.rationale.Rationale
+import com.eye.cool.permission.rationale.SettingRationale
+import com.eye.cool.permission.support.CompatContext
+import com.eye.cool.permission.support.Permission
+import com.eye.cool.permission.support.PermissionUtil
 import java.util.*
 
 /**
  * The permissions for all requests must be declared in the manifest.
  * Created by cool on 2018/4/13.
  */
-class PermissionHelper private constructor(private var context: Context) {
+class PermissionHelper private constructor(private var context: CompatContext) {
 
-  private var rationale: Rationale? = null
-  private var rationaleSetting: Rationale? = null
-  private var rationaleInstallPackagesSetting: Rationale? = null
+  private lateinit var rationale: Rationale
+  private lateinit var rationaleSetting: Rationale
+  private lateinit var rationaleInstallPackagesSetting: Rationale
   private var callback: ((authorise: Boolean) -> Unit)? = null
-  private var permissions: Array<String>? = null
+  private lateinit var permissions: Array<String>
   private var showRationaleSettingWhenDenied = true
   private var showRationaleWhenRequest = false
   private var deniedPermissionCallback: ((Array<String>) -> Unit)? = null
@@ -28,17 +38,17 @@ class PermissionHelper private constructor(private var context: Context) {
    * and returns true for all other permissions
    */
   fun request() {
-    if (permissions == null || permissions!!.isEmpty()) {
+    if (permissions.isNullOrEmpty()) {
       callback?.invoke(true)
       return
     }
-    val target = context.applicationInfo.targetSdkVersion
+    val target = context.context().applicationInfo.targetSdkVersion
     if (target >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      requestPermission(context)
+      requestPermission(context.context())
     } else {
       val deniedPermissions = requestPermissionBelow23()
       if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
-        rationaleSetting?.showRationale(context, deniedPermissions.toTypedArray(), null)
+        rationaleSetting.showRationale(context.context(), deniedPermissions.toTypedArray(), null)
       } else {
         val hasDeniedPermissions = deniedPermissions.isNotEmpty()
         if (hasDeniedPermissions) {
@@ -51,13 +61,13 @@ class PermissionHelper private constructor(private var context: Context) {
 
   private fun requestPermissionBelow23(): List<String> {
     val deniedPermissions = arrayListOf<String>()
-    permissions?.forEach {
+    permissions.forEach {
       val available = when (it) {
         in Permission.CAMERA -> {
           PermissionUtil.isCameraAvailable()
         }
         in Permission.STORAGE -> {
-          PermissionUtil.isCacheDirAvailable(context) && PermissionUtil.isExternalDirAvailable()
+          PermissionUtil.isCacheDirAvailable(context.context()) && PermissionUtil.isExternalDirAvailable()
         }
 
         in Permission.MICROPHONE -> {
@@ -77,12 +87,12 @@ class PermissionHelper private constructor(private var context: Context) {
 
   @TargetApi(Build.VERSION_CODES.M)
   private fun requestPermission(context: Context) {
-    val deniedPermissions = getDeniedPermissions(context, permissions)
+    val deniedPermissions = PermissionUtil.getDeniedPermissions(context, permissions)
     when {
       deniedPermissions.isEmpty() -> {
         callback?.invoke(true)
       }
-      showRationaleWhenRequest -> rationale?.showRationale(context, deniedPermissions) {
+      showRationaleWhenRequest -> rationale.showRationale(context, deniedPermissions) {
         if (it) {
           requestPermission(deniedPermissions)
         } else {
@@ -95,9 +105,26 @@ class PermissionHelper private constructor(private var context: Context) {
   }
 
   private fun requestPermission(permissions: Array<String>) {
-    PermissionActivity.requestPermission(context, permissions) { requestPermissions, grantResults ->
+    val filtered = filterInstallPackagePermission(permissions)
+    if (filtered.isNullOrEmpty()) {
+      callback?.invoke(true)
+      return
+    }
+    context.requestPermission(filtered) { requestPermissions, grantResults ->
       verifyPermissions(requestPermissions, grantResults)
     }
+  }
+
+  private fun filterInstallPackagePermission(permissions: Array<String>): Array<String> {
+    val filtered = permissions.toMutableList()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val result = context.context().packageManager.canRequestPackageInstalls()
+      if (result) {
+        filtered.remove(INSTALL_PACKAGES)
+        filtered.remove(REQUEST_INSTALL_PACKAGES)
+      }
+    }
+    return filtered.toTypedArray()
   }
 
   private fun verifyPermissions(permissions: Array<String>, grantResults: IntArray) {
@@ -114,18 +141,21 @@ class PermissionHelper private constructor(private var context: Context) {
     } else {
       val deniedArray = deniedPermissions.toTypedArray()
       if (showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
-        if (deniedArray.size == 1 && deniedArray[0] == android.Manifest.permission.REQUEST_INSTALL_PACKAGES) {
-          val installPermission = arrayOf(android.Manifest.permission.REQUEST_INSTALL_PACKAGES)
-          rationaleInstallPackagesSetting?.showRationale(context, installPermission) {
-            if (!it) {
-              deniedPermissionCallback?.invoke(installPermission)
+        if (!requestInstallPackage(deniedArray)) {
+          rationaleSetting.showRationale(context.context(), deniedArray) {
+            if (it) {
+              context.startSettingForResult(deniedArray) { permissions ->
+                if (permissions.isNullOrEmpty()) {
+                  callback?.invoke(true)
+                } else {
+                  callback?.invoke(false)
+                  deniedPermissionCallback?.invoke(permissions)
+                }
+              }
+            } else {
+              callback?.invoke(false)
             }
-            callback?.invoke(it)
           }
-        } else {
-          deniedPermissionCallback?.invoke(deniedArray)
-          callback?.invoke(false)
-          rationaleSetting?.showRationale(context, deniedArray)
         }
       } else {
         deniedPermissionCallback?.invoke(deniedArray)
@@ -134,19 +164,54 @@ class PermissionHelper private constructor(private var context: Context) {
     }
   }
 
+  private fun requestInstallPackage(permissions: Array<String>): Boolean {
+
+    if (permissions.size > 2) return false
+
+    if (permissions.size == 2 && (permissions.contains(REQUEST_INSTALL_PACKAGES) && permissions.contains(INSTALL_PACKAGES))
+        || (permissions.contains(REQUEST_INSTALL_PACKAGES) || permissions.contains(INSTALL_PACKAGES))
+    ) {
+      rationaleInstallPackagesSetting.showRationale(context.context(), permissions) {
+        if (it) {
+          context.requestInstallPackage(callback)
+        } else {
+          deniedPermissionCallback?.invoke(permissions)
+          callback?.invoke(false)
+        }
+      }
+      return true
+    }
+    return false
+  }
+
   /**
    * Has always been denied permissions.
    */
   private fun hasAlwaysDeniedPermission(deniedPermissions: Array<String>): Boolean {
     for (permission in deniedPermissions) {
-      if (!isNeedShowRationalePermission(context, permission)) {
+      if (!isNeedShowRationalePermission(context.context(), permission)) {
         return true
       }
     }
     return false
   }
 
-  class Builder(private var context: Context) {
+  class Builder {
+
+    constructor(context: Context) {
+      this.context = CompatContext(context)
+    }
+
+    constructor(fragment: Fragment) {
+      this.context = CompatContext(fragment)
+    }
+
+    constructor(activity: Activity) {
+      this.context = CompatContext(activity)
+    }
+
+    private var context: CompatContext
+
     private var rationale: Rationale? = null
     private var rationaleSetting: Rationale? = null
     private var rationaleInstallPackagesSetting: Rationale? = null
@@ -160,7 +225,6 @@ class PermissionHelper private constructor(private var context: Context) {
      * @param permission Requested permission is required
      */
     fun permission(permission: String): Builder {
-      if (!permission.startsWith("android.permission") && permission != WRITE_VOICEMAIL) return this
       permissions.add(permission)
       return this
     }
@@ -169,8 +233,7 @@ class PermissionHelper private constructor(private var context: Context) {
      * @param permissions Requested permissions are required
      */
     fun permissions(permissions: Array<String>): Builder {
-      val filtered = permissions.filter { it.startsWith("android.permission") || it == WRITE_VOICEMAIL }
-      this.permissions.addAll(filtered)
+      this.permissions.addAll(permissions)
       return this
     }
 
@@ -178,8 +241,7 @@ class PermissionHelper private constructor(private var context: Context) {
      * @param permissions Requested permissions are required
      */
     fun permissions(permissions: Collection<String>): Builder {
-      val filtered = permissions.filter { it.startsWith("android.permission") || it == WRITE_VOICEMAIL }
-      this.permissions.addAll(filtered)
+      this.permissions.addAll(permissions)
       return this
     }
 
@@ -270,17 +332,6 @@ class PermissionHelper private constructor(private var context: Context) {
       } catch (ignored: Exception) {
         false
       }
-    }
-
-    @TargetApi(Build.VERSION_CODES.M)
-    private fun getDeniedPermissions(context: Context, permissions: Array<String>?): Array<String> {
-      val requestList = mutableListOf<String>()
-      permissions?.forEach {
-        if (context.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED) {
-          requestList.add(it)
-        }
-      }
-      return requestList.toTypedArray()
     }
   }
 }

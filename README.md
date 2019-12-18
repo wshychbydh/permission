@@ -18,6 +18,8 @@
 
 7、可自定义引导权限提示语
 
+8、引导设置权限并监听回调结果
+
 ### 使用方法：
 
 1、在root目录的build.gradle目录中添加
@@ -33,7 +35,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:permission:1.1.2'
+        implementation 'com.github.wshychbydh:permission:1.1.3'
     }
 ```
 
@@ -91,7 +93,7 @@
 ```
 **注**：
 
-1、有且仅有android.permission.REQUEST_INSTALL_PACKAGES时，才会弹出引导授权安装包提示框
+1、有且仅有android.permission.REQUEST_INSTALL_PACKAGES 或 android.permission.INSTALL_PACKAGES时，才会弹出引导授权安装包提示框
 
 2、所有运行时权限都必须在Manifest中声明，否则一律返回false
 

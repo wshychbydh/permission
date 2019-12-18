@@ -25,4 +25,6 @@
   <string name="permission_storage">Grant access to the storage</string>
   <string name="permission_take_photo">Photos</string>
   <string name="permission_select_album">Album</string>
+
+  <string name="permission_activity_recognition">Activity Recognition</string>
 </resources>

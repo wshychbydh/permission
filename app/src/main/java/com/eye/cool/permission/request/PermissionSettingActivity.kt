@@ -1,4 +1,4 @@
-package com.eye.cool.permission
+package com.eye.cool.permission.request
 
 import android.annotation.TargetApi
 import android.app.Activity
@@ -12,39 +12,25 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import com.eye.cool.permission.support.PermissionSetting
+import com.eye.cool.permission.support.PermissionUtil
 
 /**
  * Request permissions.
  * Created cool on 2018/4/16.
  */
-@TargetApi(Build.VERSION_CODES.M)
-internal class PermissionActivity : Activity() {
+internal class PermissionSettingActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     invasionStatusBar(this)
-
-    val intent = intent
-    val permissions = intent.getStringArrayExtra(REQUEST_PERMISSIONS)
-
-    if (permissions != null && permissions.isNotEmpty()) {
-      requestPermissions(permissions, 1)
+    val requestInstallPackages = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
+    if (requestInstallPackages) {
+      val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
+      startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
     } else {
-      val requestInstallPackages = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
-      if (requestInstallPackages) {
-        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
-        startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
-      } else {
-        sPermissionListener = null
-        finish()
-      }
+      PermissionSetting().start(this, REQUEST_SETTING_CODE)
     }
-  }
-
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-    sPermissionListener?.invoke(permissions, grantResults)
-    sPermissionListener = null
-    finish()
   }
 
   override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -52,33 +38,43 @@ internal class PermissionActivity : Activity() {
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-    super.onActivityResult(requestCode, resultCode, data)
-    if (requestCode == REQUEST_INSTALL_PACKAGES_CODE && resultCode == RESULT_OK) {
-      sRequestInstallPackageListener?.invoke(true)
-    } else {
-      sRequestInstallPackageListener?.invoke(false)
+    if (requestCode == REQUEST_INSTALL_PACKAGES_CODE) {
+      var result = resultCode == RESULT_OK
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        result = result or packageManager.canRequestPackageInstalls()
+      }
+      sRequestInstallPackageListener?.invoke(result)
+    } else if (requestCode == REQUEST_SETTING_CODE) {
+      val permissions = intent.getStringArrayExtra(PERMISSIONS)
+      if (permissions.isNullOrEmpty()) {
+        sDeniedPermission?.invoke(null)
+      } else {
+        sDeniedPermission?.invoke(PermissionUtil.getDeniedPermissions(this, permissions))
+      }
     }
     finish()
   }
 
   override fun onDestroy() {
     super.onDestroy()
-    sPermissionListener = null
+    sDeniedPermission = null
     sRequestInstallPackageListener = null
   }
 
   companion object {
 
-    private const val REQUEST_PERMISSIONS = "permission"
-    private const val REQUEST_INSTALL_PACKAGES = "request_install_package"
-    private const val REQUEST_INSTALL_PACKAGES_CODE = 7001
+    private const val PERMISSIONS = "permissions"
+    private const val REQUEST_SETTING_CODE = 8011
 
-    private var sPermissionListener: ((permissions: Array<String>, grantResults: IntArray) -> Unit)? = null
+    private const val REQUEST_INSTALL_PACKAGES = "request_install_package"
+    private const val REQUEST_INSTALL_PACKAGES_CODE = 7011
+
+    private var sDeniedPermission: ((Array<String>?) -> Unit)? = null
     private var sRequestInstallPackageListener: ((Boolean) -> Unit)? = null
 
     @TargetApi(Build.VERSION_CODES.O)
     fun requestInstallPackages(context: Context, callback: ((Boolean) -> Unit)? = null) {
-      this.sRequestInstallPackageListener = callback
+      sRequestInstallPackageListener = callback
       val intent = Intent(context, PermissionActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       intent.putExtra(REQUEST_INSTALL_PACKAGES, true)
@@ -88,12 +84,15 @@ internal class PermissionActivity : Activity() {
     /**
      * Request for permissions.
      */
-    fun requestPermission(context: Context, permissions: Array<String>,
-                          permissionListener: ((permissions: Array<String>, grantResults: IntArray) -> Unit)? = null) {
-      sPermissionListener = permissionListener
-      val intent = Intent(context, PermissionActivity::class.java)
+    fun startSetting(
+        context: Context,
+        permissions: Array<String>,
+        deniedPermission: ((Array<String>?) -> Unit)? = null
+    ) {
+      sDeniedPermission = deniedPermission
+      val intent = Intent(context, PermissionSettingActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-      intent.putExtra(REQUEST_PERMISSIONS, permissions)
+      intent.putExtra(PERMISSIONS, permissions)
       context.startActivity(intent)
     }
 
@@ -104,7 +103,9 @@ internal class PermissionActivity : Activity() {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
         val window = activity.window
         val decorView = window.decorView
-        decorView.systemUiVisibility = (decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
+        decorView.systemUiVisibility = (decorView.systemUiVisibility
+            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE)
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
         window.statusBarColor = Color.TRANSPARENT
       }

@@ -26,4 +26,6 @@
   <string name="permission_storage">请授予访问存储权限</string>
   <string name="permission_take_photo">拍照</string>
   <string name="permission_select_album">从相册选取</string>
+
+  <string name="permission_activity_recognition">界面活动识别</string>
 </resources>

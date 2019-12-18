@@ -1,7 +1,8 @@
-package com.eye.cool.permission
+package com.eye.cool.permission.rationale
 
 import android.app.AlertDialog
 import android.content.Context
+import com.eye.cool.permission.R
 
 /**
  * Created by cool on 2018/4/20.
@@ -21,9 +22,11 @@ internal class InstallPackagesSettingRationale : Rationale {
         .setTitle(R.string.permission_title_rationale)
         .setMessage(message)
         .setPositiveButton(R.string.permission_setting) { _, _ ->
-          PermissionActivity.requestInstallPackages(context, callback)
+          callback?.invoke(true)
         }
-        .setNegativeButton(R.string.permission_no) { _, _ -> callback?.invoke(false) }
+        .setNegativeButton(R.string.permission_no) { _, _ ->
+          callback?.invoke(false)
+        }
         .show()
   }
 

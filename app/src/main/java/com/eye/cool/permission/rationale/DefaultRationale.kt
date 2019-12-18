@@ -1,8 +1,10 @@
-package com.eye.cool.permission
+package com.eye.cool.permission.rationale
 
 import android.app.AlertDialog
 import android.content.Context
 import android.text.TextUtils
+import com.eye.cool.permission.R
+import com.eye.cool.permission.support.Permission
 
 /**
  * Created by cool on 2018/4/20.

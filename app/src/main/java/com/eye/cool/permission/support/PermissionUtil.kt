@@ -1,11 +1,13 @@
-package com.eye.cool.permission
+package com.eye.cool.permission.support
 
 import android.annotation.TargetApi
 import android.content.Context
+import android.content.pm.PackageManager
 import android.hardware.Camera
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Environment
 import android.os.StrictMode
 
@@ -87,12 +89,6 @@ object PermissionUtil {
     }
   }
 
-  @JvmStatic
-  fun openPermissionSetting(context: Context) {
-    PermissionSetting(context).start()
-  }
-
-
   /**
    * Resolve file uri access issues for 7.0 and above
    * Call in application's onCreate. not recommend!
@@ -102,5 +98,16 @@ object PermissionUtil {
     val builder = StrictMode.VmPolicy.Builder()
     StrictMode.setVmPolicy(builder.build())
     builder.detectFileUriExposure()
+  }
+
+  @TargetApi(Build.VERSION_CODES.M)
+  fun getDeniedPermissions(context: Context, permissions: Array<String>?): Array<String> {
+    val requestList = mutableListOf<String>()
+    permissions?.forEach {
+      if (context.checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED) {
+        requestList.add(it)
+      }
+    }
+    return requestList.toTypedArray()
   }
 }

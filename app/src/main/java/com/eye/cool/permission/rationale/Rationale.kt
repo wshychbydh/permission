@@ -1,4 +1,4 @@
-package com.eye.cool.permission
+package com.eye.cool.permission.rationale
 
 import android.content.Context
 
