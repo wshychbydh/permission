@@ -97,6 +97,7 @@
 
 2、所有运行时权限都必须在Manifest中声明，否则一律返回false
 
+3、请求权限的过程中可能会导致Activity出现一次或多次paused -> resumed
 
 
 #### 联系方式 wshychbydh@gmail.com

@@ -18,7 +18,13 @@ import com.eye.cool.permission.support.PermissionUtil
 import java.util.*
 
 /**
+ * This class may start an activity allowing the user to choose which permissions
+ * to grant and which to reject. Hence, you should be prepared that your activity
+ * may be paused and resumed. Further, granting some permissions may require
+ * a restart of you application. {@link Activity or Fragment requestPermissions()}.
+ *
  * The permissions for all requests must be declared in the manifest.
+ *
  * Created by cool on 2018/4/13.
  */
 class PermissionHelper private constructor(private var context: CompatContext) {
