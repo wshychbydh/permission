@@ -100,6 +100,14 @@
 3、请求权限的过程中可能会导致Activity出现一次或多次paused -> resumed
 
 
-#### 联系方式 wshychbydh@gmail.com
+#####   
+ 
+**Demo地址：(https://github.com/wshychbydh/SampleDemo)**    
+    
+##
+
+###### **欢迎fork，更希望你能贡献commit.** (*￣︶￣)    
+
+###### 联系方式 wshychbydh@gmail.com
 
 [![](https://jitpack.io/v/wshychbydh/Permission.svg)](https://jitpack.io/#wshychbydh/Permission)
