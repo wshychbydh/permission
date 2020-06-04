@@ -27,7 +27,11 @@ internal class PermissionSettingActivity : Activity() {
     val requestInstallPackages = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
     if (requestInstallPackages) {
       val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
-      startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
+      if (intent.resolveActivity(packageManager) != null) {
+        startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
+      } else {
+        sRequestInstallPackageListener?.invoke(false)
+      }
     } else {
       PermissionSetting().start(this, REQUEST_SETTING_CODE)
     }

@@ -128,18 +128,6 @@ class PermissionHelper private constructor(private var context: CompatContext) {
     }
   }
 
-  private fun filterInstallPackagePermission(permissions: Array<String>): Array<String> {
-    val filtered = permissions.toMutableList()
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      val result = context.context().packageManager.canRequestPackageInstalls()
-      if (result) {
-        filtered.remove(INSTALL_PACKAGES)
-        filtered.remove(REQUEST_INSTALL_PACKAGES)
-      }
-    }
-    return filtered.toTypedArray()
-  }
-
   private fun verifyPermissions(permissions: Array<String>, grantResults: IntArray) {
     // Verify that each required permissions has been granted, otherwise all granted
     val deniedPermissions = arrayListOf<String>()
@@ -180,6 +168,24 @@ class PermissionHelper private constructor(private var context: CompatContext) {
 
     if (!permissions.contains(REQUEST_INSTALL_PACKAGES) && !permissions.contains(INSTALL_PACKAGES)) {
       callback.invoke(permissions)
+      return
+    }
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+      val temp = permissions.toMutableList()
+      temp.remove(INSTALL_PACKAGES)
+      temp.remove(REQUEST_INSTALL_PACKAGES)
+      callback.invoke(temp.toTypedArray())
+      return
+    }
+
+    val result = context.context().packageManager.canRequestPackageInstalls()
+
+    if (result) {
+      val temp = permissions.toMutableList()
+      temp.remove(INSTALL_PACKAGES)
+      temp.remove(REQUEST_INSTALL_PACKAGES)
+      callback.invoke(temp.toTypedArray())
       return
     }
 
