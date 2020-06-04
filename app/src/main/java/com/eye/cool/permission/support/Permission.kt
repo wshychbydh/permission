@@ -261,7 +261,16 @@ object Permission {
   /**
    * Remove all dynamically permissions
    */
+  @Deprecated("Use reset() instead")
   fun clearText(): Permission {
+    translates.clear()
+    return this
+  }
+
+  /**
+   * Remove all dynamically permissions
+   */
+  fun reset(): Permission {
     translates.clear()
     return this
   }

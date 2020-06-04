@@ -1,8 +1,8 @@
 package com.eye.cool.permission.rationale
 
-import android.app.AlertDialog
 import android.content.Context
 import android.text.TextUtils
+import androidx.appcompat.app.AlertDialog
 import com.eye.cool.permission.R
 import com.eye.cool.permission.support.Permission
 
@@ -21,7 +21,8 @@ internal class SettingRationale : Rationale {
     val message = context.getString(R.string.permission_setting_rationale,
         getAppName(context), TextUtils.join("\n", permissionNames))
 
-    AlertDialog.Builder(context)
+    AlertDialog
+        .Builder(context)
         .setCancelable(false)
         .setTitle(R.string.permission_title_rationale)
         .setMessage(message)

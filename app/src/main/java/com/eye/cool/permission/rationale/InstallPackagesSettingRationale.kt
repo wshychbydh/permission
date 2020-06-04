@@ -1,7 +1,7 @@
 package com.eye.cool.permission.rationale
 
-import android.app.AlertDialog
 import android.content.Context
+import androidx.appcompat.app.AlertDialog
 import com.eye.cool.permission.R
 
 /**

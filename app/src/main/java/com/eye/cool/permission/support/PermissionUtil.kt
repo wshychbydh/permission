@@ -93,6 +93,7 @@ object PermissionUtil {
    * Resolve file uri access issues for 7.0 and above
    * Call in application's onCreate. not recommend!
    */
+  @JvmStatic
   @TargetApi(18)
   fun detectFileUriExposure() {
     val builder = StrictMode.VmPolicy.Builder()
@@ -100,6 +101,7 @@ object PermissionUtil {
     builder.detectFileUriExposure()
   }
 
+  @JvmStatic
   @TargetApi(Build.VERSION_CODES.M)
   fun getDeniedPermissions(context: Context, permissions: Array<String>?): Array<String> {
     val requestList = mutableListOf<String>()

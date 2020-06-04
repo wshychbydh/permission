@@ -5,12 +5,14 @@
   <application android:allowBackup="true">
     <activity
       android:name=".request.PermissionActivity"
+      android:configChanges="keyboardHidden|orientation|screenSize"
       android:exported="false"
       android:launchMode="singleInstance"
       android:theme="@style/PermissionTranslate" />
 
     <activity
       android:name=".request.PermissionSettingActivity"
+      android:configChanges="keyboardHidden|orientation|screenSize"
       android:exported="false"
       android:launchMode="singleInstance"
       android:theme="@style/PermissionTranslate" />

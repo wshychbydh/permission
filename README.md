@@ -12,7 +12,7 @@
 
 4、权限组整合，可按组请求权限，详细分组见 **Permission**
 
-5、适配8.0以上安装包权限
+5、适配8.0安装包权限
 
 6、可自定义引导权限弹框及设置弹框
 
@@ -35,7 +35,7 @@
 2、在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:permission:1.1.3'
+        implementation 'com.github.wshychbydh:permission:1.1.4'
     }
 ```
 
@@ -77,8 +77,9 @@
          .rationaleSetting(rationale)                  //引导设置弹框（可选）
          .rationaleInstallPackagesSetting(rationale)   //引导设置安装未知来源应用弹框（可选）
          .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
-         .showRationaleWhenRequest(boolean)            //是否弹框提示需要申请的权限（默认false）
-         .permissionCallback {                          //授权结果回调（必填，否则无回调）
+         .showRationaleWhenRequest(boolean)            //是否弹框提示需要动态申请的权限（默认false）
+         .showInstallRationaleWhenRequest(boolean)     //是否弹框提示安装APK需要申请的权限（默认false）
+         .permissionCallback {                         //授权结果回调（必填，否则无回调）
            if (it) {
              // 请求权限成功
            } else {
