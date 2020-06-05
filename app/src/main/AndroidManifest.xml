@@ -8,14 +8,14 @@
       android:configChanges="keyboardHidden|orientation|screenSize"
       android:exported="false"
       android:launchMode="singleInstance"
-      android:theme="@style/PermissionTranslate" />
+      android:theme="@style/permission_translate" />
 
     <activity
       android:name=".request.PermissionSettingActivity"
       android:configChanges="keyboardHidden|orientation|screenSize"
       android:exported="false"
       android:launchMode="singleInstance"
-      android:theme="@style/PermissionTranslate" />
+      android:theme="@style/permission_translate" />
   </application>
 
 </manifest>
