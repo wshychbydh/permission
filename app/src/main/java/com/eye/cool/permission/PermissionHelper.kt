@@ -171,17 +171,9 @@ class PermissionHelper private constructor(private var context: CompatContext) {
       return
     }
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-      val temp = permissions.toMutableList()
-      temp.remove(INSTALL_PACKAGES)
-      temp.remove(REQUEST_INSTALL_PACKAGES)
-      callback.invoke(temp.toTypedArray())
-      return
-    }
-
-    val result = context.context().packageManager.canRequestPackageInstalls()
-
-    if (result) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+        || context.context().packageManager.canRequestPackageInstalls()
+    ) {
       val temp = permissions.toMutableList()
       temp.remove(INSTALL_PACKAGES)
       temp.remove(REQUEST_INSTALL_PACKAGES)

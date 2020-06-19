@@ -12,7 +12,7 @@ internal class InstallPackagesSettingRationale : Rationale {
   override fun showRationale(
       context: Context,
       permissions: Array<String>,
-      callback: ((result: Boolean) -> Unit)?
+      callback: (result: Boolean) -> Unit
   ) {
 
     val message = context.getString(R.string.permission_install_packages_setting_rationale, getAppName(context))
@@ -22,10 +22,10 @@ internal class InstallPackagesSettingRationale : Rationale {
         .setTitle(R.string.permission_title_rationale)
         .setMessage(message)
         .setPositiveButton(R.string.permission_setting) { _, _ ->
-          callback?.invoke(true)
+          callback.invoke(true)
         }
         .setNegativeButton(R.string.permission_no) { _, _ ->
-          callback?.invoke(false)
+          callback.invoke(false)
         }
         .show()
   }

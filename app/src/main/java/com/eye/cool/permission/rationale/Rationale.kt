@@ -17,6 +17,6 @@ interface Rationale {
   fun showRationale(
       context: Context,
       permissions: Array<String>,
-      callback: ((result: Boolean) -> Unit)? = null
+      callback: (result: Boolean) -> Unit
   )
 }

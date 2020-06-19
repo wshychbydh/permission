@@ -10,7 +10,12 @@ import com.eye.cool.permission.support.Permission
  * Created by cool on 2018/4/20.
  */
 internal class DefaultRationale : Rationale {
-  override fun showRationale(context: Context, permissions: Array<String>, callback: ((result: Boolean) -> Unit)?) {
+
+  override fun showRationale(
+      context: Context,
+      permissions: Array<String>,
+      callback: (result: Boolean) -> Unit
+  ) {
 
     val permissionNames = Permission.transformText(context, permissions)
     val message = context.getString(R.string.permission_rationale, TextUtils.join("\n", permissionNames))
@@ -20,10 +25,10 @@ internal class DefaultRationale : Rationale {
         .setCancelable(false)
         .setTitle(R.string.permission_title_rationale).setMessage(message)
         .setPositiveButton(R.string.permission_allow) { _, _ ->
-          callback?.invoke(true)
+          callback.invoke(true)
         }
         .setNegativeButton(R.string.permission_forbid) { _, _ ->
-          callback?.invoke(false)
+          callback.invoke(false)
         }
         .show()
   }
