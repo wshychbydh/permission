@@ -54,13 +54,25 @@ class PermissionHelper private constructor(private var context: CompatContext) {
     if (target >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
       requestPermission()
     } else {
-      val deniedPermissions = requestPermissionBelow23()
+      val deniedPermissions = requestPermissionBelow23().toTypedArray()
       if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
-        rationaleSetting.showRationale(context.context(), deniedPermissions.toTypedArray(), null)
+        rationaleSetting.showRationale(context.context(), deniedPermissions) {
+          if (it) {
+            context.startSettingForResult(deniedPermissions) { result ->
+              if (!result.isNullOrEmpty()) {
+                deniedPermissionCallback?.invoke(result)
+              }
+              callback?.invoke(result.isNullOrEmpty())
+            }
+          } else {
+            deniedPermissionCallback?.invoke(deniedPermissions)
+            callback?.invoke(false)
+          }
+        }
       } else {
         val hasDeniedPermissions = deniedPermissions.isNotEmpty()
         if (hasDeniedPermissions) {
-          deniedPermissionCallback?.invoke(deniedPermissions.toTypedArray())
+          deniedPermissionCallback?.invoke(deniedPermissions)
         }
         callback?.invoke(!hasDeniedPermissions)
       }
@@ -144,14 +156,7 @@ class PermissionHelper private constructor(private var context: CompatContext) {
       if (showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
         rationaleSetting.showRationale(context.context(), deniedArray) {
           if (it) {
-            context.startSettingForResult(deniedArray) { result ->
-              if (result.isNullOrEmpty()) {
-                callback?.invoke(true)
-              } else {
-                deniedPermissionCallback?.invoke(result)
-                callback?.invoke(false)
-              }
-            }
+            requestPermissionBySetting(deniedPermissions)
           } else {
             deniedPermissionCallback?.invoke(deniedArray)
             callback?.invoke(false)
@@ -160,6 +165,34 @@ class PermissionHelper private constructor(private var context: CompatContext) {
       } else {
         deniedPermissionCallback?.invoke(deniedArray)
         callback?.invoke(false)
+      }
+    }
+  }
+
+  private fun requestPermissionBySetting(denied: ArrayList<String>) {
+    if (denied.contains(REQUEST_INSTALL_PACKAGES) || denied.contains(INSTALL_PACKAGES)) {
+      context.requestInstallPackage {
+        if (it) {
+          denied.remove(INSTALL_PACKAGES)
+          denied.remove(REQUEST_INSTALL_PACKAGES)
+        }
+        context.startSettingForResult(denied.toTypedArray()) { result ->
+          if (result.isNullOrEmpty()) {
+            callback?.invoke(true)
+          } else {
+            deniedPermissionCallback?.invoke(result)
+            callback?.invoke(false)
+          }
+        }
+      }
+    } else {
+      context.startSettingForResult(denied.toTypedArray()) { result ->
+        if (result.isNullOrEmpty()) {
+          callback?.invoke(true)
+        } else {
+          deniedPermissionCallback?.invoke(result)
+          callback?.invoke(false)
+        }
       }
     }
   }

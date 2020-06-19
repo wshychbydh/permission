@@ -53,7 +53,11 @@ internal class PermissionSettingActivity : Activity() {
       if (permissions.isNullOrEmpty()) {
         sDeniedPermission?.invoke(null)
       } else {
-        sDeniedPermission?.invoke(PermissionUtil.getDeniedPermissions(this, permissions))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          sDeniedPermission?.invoke(PermissionUtil.getDeniedPermissions(this, permissions))
+        } else {
+          sDeniedPermission?.invoke(permissions)
+        }
       }
     }
     finish()

@@ -31,6 +31,11 @@ internal class CompatContext {
 
   fun startSettingForResult(permissions: Array<String>, deniedPermissions: ((Array<String>?) -> Unit)? = null) {
 
+    if (permissions.isEmpty()) {
+      deniedPermissions?.invoke(null)
+      return
+    }
+
     when {
       context != null -> {
         PermissionSettingActivity.startSetting(context(), permissions, deniedPermissions)
