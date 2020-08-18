@@ -42,8 +42,24 @@ object PermissionUtil {
    */
   @JvmStatic
   fun isExternalDirAvailable(): Boolean {
-    val file = Environment.getExternalStorageDirectory()
-    return file != null && file.canWrite() && file.canRead()
+    return isExternalStorageWritable()
+  }
+
+  /**
+   * Checks if a volume containing external storage is available for read and write.
+   */
+  @JvmStatic
+  fun isExternalStorageWritable(): Boolean {
+    return Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
+  }
+
+  /**
+   * Checks if a volume containing external storage is available to at least read.
+   */
+  @JvmStatic
+  fun isExternalStorageReadable(): Boolean {
+    return Environment.getExternalStorageState() in
+        setOf(Environment.MEDIA_MOUNTED, Environment.MEDIA_MOUNTED_READ_ONLY)
   }
 
   /**
