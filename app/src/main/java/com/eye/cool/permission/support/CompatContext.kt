@@ -3,6 +3,7 @@ package com.eye.cool.permission.support
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import com.eye.cool.permission.request.PermissionActivity
 import com.eye.cool.permission.request.PermissionDialogFragment
 import com.eye.cool.permission.request.PermissionSettingActivity
@@ -15,10 +16,10 @@ internal class CompatContext {
 
   private var context: Context? = null
   private var fragment: Fragment? = null
-  private var activity: AppCompatActivity? = null
+  private var activity: FragmentActivity? = null
 
   constructor(context: Context) {
-    if (context is AppCompatActivity) {
+    if (context is FragmentActivity) {
       this.activity = context
     } else {
       this.context = context
@@ -29,7 +30,10 @@ internal class CompatContext {
     this.fragment = fragmentX
   }
 
-  fun startSettingForResult(permissions: Array<String>, deniedPermissions: ((Array<String>?) -> Unit)? = null) {
+  fun startSettingForResult(
+      permissions: Array<String>,
+      deniedPermissions: ((Array<String>?) -> Unit)? = null
+  ) {
 
     if (permissions.isEmpty()) {
       deniedPermissions?.invoke(null)
@@ -90,7 +94,7 @@ internal class CompatContext {
   }
 
   fun context(): Context {
-    return context ?: fragment?.context ?: activity
+    return context ?: fragment?.requireContext() ?: activity
     ?: throw IllegalStateException("CompatContext init error")
   }
 }

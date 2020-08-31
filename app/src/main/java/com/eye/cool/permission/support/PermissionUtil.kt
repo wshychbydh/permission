@@ -73,7 +73,9 @@ object PermissionUtil {
 
   private fun getMinBufferSize(): Int {
     for (rate in intArrayOf(44100, 22050, 11025, 16000, 8000)) {  // add the rates you wish to check against
-      val bufferSize = AudioRecord.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_DEFAULT, AudioFormat.ENCODING_PCM_16BIT)
+      val bufferSize = AudioRecord.getMinBufferSize(
+          rate, AudioFormat.CHANNEL_OUT_DEFAULT, AudioFormat.ENCODING_PCM_16BIT
+      )
       if (bufferSize > 0) {
         return bufferSize
       }
@@ -127,5 +129,18 @@ object PermissionUtil {
       }
     }
     return requestList.toTypedArray()
+  }
+
+  internal fun isNeedShowRationalePermission(context: Context, permission: String): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+    val packageManager = context.packageManager
+    val pkManagerClass = packageManager.javaClass
+    return try {
+      val method = pkManagerClass.getMethod("shouldShowRequestPermissionRationale", String::class.java)
+      if (!method.isAccessible) method.isAccessible = true
+      method.invoke(packageManager, permission) as Boolean? ?: false
+    } catch (ignored: Exception) {
+      false
+    }
   }
 }

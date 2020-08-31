@@ -108,7 +108,10 @@ class PermissionSetting {
         return defaultApi(context)
       }
       val intent = Intent()
-      intent.component = ComponentName("com.huawei.systemmanager", "com.huawei" + ".permissionmanager.ui.NotifyActivity")
+      intent.component = ComponentName(
+              "com.huawei.systemmanager",
+              "com.huawei" + ".permissionmanager.ui.NotifyActivity"
+      )
       return intent
     }
 
@@ -128,9 +131,15 @@ class PermissionSetting {
       val intent = Intent()
       intent.putExtra("packagename", context.packageName)
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1) {
-        intent.component = ComponentName("com.vivo.permissionmanager", "com.vivo" + ".permissionmanager.context.SoftPermissionDetailActivity")
+        intent.component = ComponentName(
+                "com.vivo.permissionmanager",
+                "com.vivo" + ".permissionmanager.context.SoftPermissionDetailActivity"
+        )
       } else {
-        intent.component = ComponentName("com.iqoo.secure", "com.iqoo.secure.safeguard" + ".SoftPermissionDetailActivity")
+        intent.component = ComponentName(
+                "com.iqoo.secure",
+                "com.iqoo.secure.safeguard" + ".SoftPermissionDetailActivity"
+        )
       }
       return intent
     }
@@ -151,7 +160,9 @@ class PermissionSetting {
       }
       val intent = Intent("com.meizu.safe.security.SHOW_APPSEC")
       intent.putExtra("packageName", context.packageName)
-      intent.component = ComponentName("com.meizu.safe", "com.meizu.safe.security" + ".AppSecActivity")
+      intent.component = ComponentName(
+              "com.meizu.safe", "com.meizu.safe.security" + ".AppSecActivity"
+      )
       return intent
     }
 

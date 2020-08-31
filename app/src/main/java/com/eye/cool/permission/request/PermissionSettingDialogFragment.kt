@@ -5,8 +5,12 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.Window
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
+import com.eye.cool.permission.R
 import com.eye.cool.permission.support.PermissionSetting
 import com.eye.cool.permission.support.PermissionUtil
 
@@ -14,6 +18,20 @@ import com.eye.cool.permission.support.PermissionUtil
  *Created by ycb on 2019/12/17 0017
  */
 internal class PermissionSettingDialogFragment : AppCompatDialogFragment() {
+
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setStyle(DialogFragment.STYLE_NO_INPUT, R.style.permission_translate_dialog)
+  }
+
+  override fun onStart() {
+    super.onStart()
+    val window: Window = dialog!!.window ?: return
+    val lp = window.attributes as WindowManager.LayoutParams
+    lp.dimAmount = 0f
+    lp.flags = lp.flags or WindowManager.LayoutParams.FLAG_DIM_BEHIND
+    window.attributes = lp
+  }
 
   override fun onActivityCreated(savedInstanceState: Bundle?) {
     super.onActivityCreated(savedInstanceState)

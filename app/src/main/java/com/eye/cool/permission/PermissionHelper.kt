@@ -15,6 +15,7 @@ import com.eye.cool.permission.rationale.SettingRationale
 import com.eye.cool.permission.support.CompatContext
 import com.eye.cool.permission.support.Permission
 import com.eye.cool.permission.support.PermissionUtil
+import com.eye.cool.permission.support.PermissionUtil.isNeedShowRationalePermission
 import java.util.*
 
 /**
@@ -88,7 +89,8 @@ class PermissionHelper private constructor(private var context: CompatContext) {
         }
 
         in Permission.STORAGE -> {
-          PermissionUtil.isCacheDirAvailable(context.context()) && PermissionUtil.isExternalDirAvailable()
+          PermissionUtil.isCacheDirAvailable(context.context())
+                  && PermissionUtil.isExternalDirAvailable()
         }
 
         in Permission.MICROPHONE -> {
@@ -197,9 +199,13 @@ class PermissionHelper private constructor(private var context: CompatContext) {
     }
   }
 
-  private fun requestInstallPackage(permissions: Array<String>, callback: (Array<String>) -> Unit) {
+  private fun requestInstallPackage(
+          permissions: Array<String>,
+          callback: (Array<String>) -> Unit
+  ) {
 
-    if (!permissions.contains(REQUEST_INSTALL_PACKAGES) && !permissions.contains(INSTALL_PACKAGES)) {
+    if (!permissions.contains(REQUEST_INSTALL_PACKAGES)
+            && !permissions.contains(INSTALL_PACKAGES)) {
       callback.invoke(permissions)
       return
     }
@@ -369,22 +375,6 @@ class PermissionHelper private constructor(private var context: CompatContext) {
     fun build(): PermissionHelper {
       helper.permissions = permissions.toTypedArray()
       return helper
-    }
-  }
-
-  companion object {
-
-    private fun isNeedShowRationalePermission(context: Context, permission: String): Boolean {
-      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
-      val packageManager = context.packageManager
-      val pkManagerClass = packageManager.javaClass
-      return try {
-        val method = pkManagerClass.getMethod("shouldShowRequestPermissionRationale", String::class.java)
-        if (!method.isAccessible) method.isAccessible = true
-        method.invoke(packageManager, permission) as Boolean? ?: false
-      } catch (ignored: Exception) {
-        false
-      }
     }
   }
 }

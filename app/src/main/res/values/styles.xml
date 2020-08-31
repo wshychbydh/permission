@@ -6,4 +6,9 @@
     <item name="android:windowIsTranslucent">true</item>
     <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
   </style>
+
+  <style name="permission_translate_dialog" parent="@android:style/Theme.Dialog">
+    <item name="android:windowBackground">@android:color/transparent</item>
+    <item name="android:windowContentOverlay">@null</item>
+  </style>
 </resources>
