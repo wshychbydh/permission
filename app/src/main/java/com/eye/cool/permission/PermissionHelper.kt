@@ -3,11 +3,11 @@ package com.eye.cool.permission
 import android.Manifest.permission.INSTALL_PACKAGES
 import android.Manifest.permission.REQUEST_INSTALL_PACKAGES
 import android.annotation.TargetApi
-import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import com.eye.cool.permission.rationale.DefaultRationale
 import com.eye.cool.permission.rationale.InstallPackagesSettingRationale
 import com.eye.cool.permission.rationale.Rationale
@@ -16,6 +16,7 @@ import com.eye.cool.permission.support.CompatContext
 import com.eye.cool.permission.support.Permission
 import com.eye.cool.permission.support.PermissionUtil
 import com.eye.cool.permission.support.PermissionUtil.isNeedShowRationalePermission
+import kotlinx.coroutines.*
 import java.util.*
 
 /**
@@ -28,6 +29,7 @@ import java.util.*
  *
  * Created by cool on 2018/4/13.
  */
+@Deprecated("Use {@link PermissionChecker} instead.")
 class PermissionHelper private constructor(private var context: CompatContext) {
 
   private lateinit var permissions: Array<String>
@@ -51,32 +53,46 @@ class PermissionHelper private constructor(private var context: CompatContext) {
       callback?.invoke(true)
       return
     }
+
     val target = context.context().applicationInfo.targetSdkVersion
     if (target >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      requestPermission()
+      MainScope().launch(Dispatchers.Main) {
+        context.proxyContext()
+        requestPermission()
+      }
     } else {
-      val deniedPermissions = requestPermissionBelow23().toTypedArray()
-      if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
+      targetBelow23()
+    }
+  }
+
+  private fun targetBelow23() {
+    val deniedPermissions = requestPermissionBelow23().toTypedArray()
+    if (deniedPermissions.isNotEmpty() && showRationaleSettingWhenDenied) {
+      MainScope().launch(Dispatchers.Main) {
+        context.proxyContext()
         rationaleSetting.showRationale(context.context(), deniedPermissions) {
           if (it) {
             context.startSettingForResult(deniedPermissions) { result ->
+              context.release()
               if (!result.isNullOrEmpty()) {
                 deniedPermissionCallback?.invoke(result)
               }
               callback?.invoke(result.isNullOrEmpty())
             }
           } else {
+            context.release()
             deniedPermissionCallback?.invoke(deniedPermissions)
             callback?.invoke(false)
           }
         }
-      } else {
-        val hasDeniedPermissions = deniedPermissions.isNotEmpty()
-        if (hasDeniedPermissions) {
-          deniedPermissionCallback?.invoke(deniedPermissions)
-        }
-        callback?.invoke(!hasDeniedPermissions)
       }
+    } else {
+      context.release()
+      val hasDeniedPermissions = deniedPermissions.isNotEmpty()
+      if (hasDeniedPermissions) {
+        deniedPermissionCallback?.invoke(deniedPermissions)
+      }
+      callback?.invoke(!hasDeniedPermissions)
     }
   }
 
@@ -90,7 +106,7 @@ class PermissionHelper private constructor(private var context: CompatContext) {
 
         in Permission.STORAGE -> {
           PermissionUtil.isCacheDirAvailable(context.context())
-                  && PermissionUtil.isExternalDirAvailable()
+              && PermissionUtil.isExternalDirAvailable()
         }
 
         in Permission.MICROPHONE -> {
@@ -111,6 +127,7 @@ class PermissionHelper private constructor(private var context: CompatContext) {
     val deniedPermissions = PermissionUtil.getDeniedPermissions(context.context(), permissions)
     when {
       deniedPermissions.isEmpty() -> {
+        context.release()
         callback?.invoke(true)
       }
       else -> filterPermissions(deniedPermissions)
@@ -119,21 +136,33 @@ class PermissionHelper private constructor(private var context: CompatContext) {
 
   private fun filterPermissions(permissions: Array<String>) {
     requestInstallPackage(permissions) { filtered ->
-      if (filtered.isNullOrEmpty()) {
-        callback?.invoke(true)
-      } else {
-        if (showRationaleWhenRequest) {
+      when {
+        filtered.isNullOrEmpty() -> {
+          context.release()
+          callback?.invoke(true)
+        }
+
+        PermissionUtil.hasInstallPermissionOnly(permissions) -> {
+          context.release()
+          deniedPermissionCallback?.invoke(filtered)
+          callback?.invoke(false)
+        }
+
+        showRationaleWhenRequest -> {
           rationale.showRationale(context.context(), filtered) {
             if (it) {
               context.requestPermission(filtered) { requestPermissions, grantResults ->
                 verifyPermissions(requestPermissions, grantResults)
               }
             } else {
+              context.release()
               deniedPermissionCallback?.invoke(filtered)
               callback?.invoke(false)
             }
           }
-        } else {
+        }
+
+        else -> {
           context.requestPermission(filtered) { requestPermissions, grantResults ->
             verifyPermissions(requestPermissions, grantResults)
           }
@@ -151,101 +180,93 @@ class PermissionHelper private constructor(private var context: CompatContext) {
       }
     }
 
-    if (deniedPermissions.isNullOrEmpty()) {
-      callback?.invoke(true)
-    } else {
-      val deniedArray = deniedPermissions.toTypedArray()
-      if (showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray)) {
+    val deniedArray = deniedPermissions.toTypedArray()
+
+    when {
+      deniedPermissions.isNullOrEmpty() -> {
+        context.release()
+        callback?.invoke(true)
+      }
+
+      PermissionUtil.hasInstallPermissionOnly(deniedArray) -> {
+        context.release()
+        deniedPermissionCallback?.invoke(deniedArray)
+        callback?.invoke(false)
+      }
+
+      showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray) -> {
         rationaleSetting.showRationale(context.context(), deniedArray) {
           if (it) {
-            requestPermissionBySetting(deniedPermissions)
+            context.startSettingForResult(deniedArray) { result ->
+              context.release()
+              if (result.isNullOrEmpty()) {
+                callback?.invoke(true)
+              } else {
+                deniedPermissionCallback?.invoke(result)
+                callback?.invoke(false)
+              }
+            }
           } else {
+            context.release()
             deniedPermissionCallback?.invoke(deniedArray)
             callback?.invoke(false)
           }
         }
-      } else {
+      }
+
+      else -> {
+        context.release()
         deniedPermissionCallback?.invoke(deniedArray)
         callback?.invoke(false)
       }
     }
   }
 
-  private fun requestPermissionBySetting(denied: ArrayList<String>) {
-    if (denied.contains(REQUEST_INSTALL_PACKAGES) || denied.contains(INSTALL_PACKAGES)) {
-      context.requestInstallPackage {
-        if (it) {
-          denied.remove(INSTALL_PACKAGES)
-          denied.remove(REQUEST_INSTALL_PACKAGES)
-        }
-        context.startSettingForResult(denied.toTypedArray()) { result ->
-          if (result.isNullOrEmpty()) {
-            callback?.invoke(true)
-          } else {
-            deniedPermissionCallback?.invoke(result)
-            callback?.invoke(false)
-          }
-        }
-      }
-    } else {
-      context.startSettingForResult(denied.toTypedArray()) { result ->
-        if (result.isNullOrEmpty()) {
-          callback?.invoke(true)
-        } else {
-          deniedPermissionCallback?.invoke(result)
-          callback?.invoke(false)
-        }
-      }
-    }
-  }
-
   private fun requestInstallPackage(
-          permissions: Array<String>,
-          callback: (Array<String>) -> Unit
+      permissions: Array<String>,
+      callback: (Array<String>) -> Unit
   ) {
 
-    if (!permissions.contains(REQUEST_INSTALL_PACKAGES)
-            && !permissions.contains(INSTALL_PACKAGES)) {
-      callback.invoke(permissions)
-      return
-    }
+    when {
+      !permissions.contains(REQUEST_INSTALL_PACKAGES)
+          && !permissions.contains(INSTALL_PACKAGES) -> {
+        callback.invoke(permissions)
+      }
 
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O
-        || context.context().packageManager.canRequestPackageInstalls()
-    ) {
-      val temp = permissions.toMutableList()
-      temp.remove(INSTALL_PACKAGES)
-      temp.remove(REQUEST_INSTALL_PACKAGES)
-      callback.invoke(temp.toTypedArray())
-      return
-    }
+      Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+          || context.context().packageManager.canRequestPackageInstalls() -> {
+        val temp = permissions.toMutableList()
+        temp.removeAll(Permission.INSTALL_PACKAGE)
+        callback.invoke(temp.toTypedArray())
+      }
 
-    if (showInstallRationaleWhenRequest) {
-      rationaleInstallPackagesSetting.showRationale(context.context(), permissions) {
-        if (it) {
-          context.requestInstallPackage { result ->
-            if (result) {
-              val temp = permissions.toMutableList()
-              temp.remove(INSTALL_PACKAGES)
-              temp.remove(REQUEST_INSTALL_PACKAGES)
-              callback.invoke(temp.toTypedArray())
-            } else {
-              callback.invoke(permissions)
+      showInstallRationaleWhenRequest -> {
+        rationaleInstallPackagesSetting.showRationale(context.context(), permissions) {
+          if (it) {
+            context.requestInstallPackage { result ->
+              if (result) {
+                val temp = permissions.toMutableList()
+                temp.removeAll(Permission.INSTALL_PACKAGE)
+                callback.invoke(temp.toTypedArray())
+              } else {
+                callback.invoke(permissions)
+              }
             }
+          } else {
+            callback.invoke(permissions)
           }
-        } else {
-          callback.invoke(permissions)
         }
       }
-    } else {
-      context.requestInstallPackage { result ->
-        if (result) {
-          val temp = permissions.toMutableList()
-          temp.remove(INSTALL_PACKAGES)
-          temp.remove(REQUEST_INSTALL_PACKAGES)
-          callback.invoke(temp.toTypedArray())
-        } else {
-          callback.invoke(permissions)
+
+      else -> {
+        context.requestInstallPackage { result ->
+          if (result) {
+            val temp = permissions.toMutableList()
+            temp.removeAll(Permission.INSTALL_PACKAGE)
+            callback.invoke(temp.toTypedArray())
+          } else {
+            callback.invoke(permissions)
+          }
         }
       }
     }
@@ -273,7 +294,7 @@ class PermissionHelper private constructor(private var context: CompatContext) {
       helper = PermissionHelper(CompatContext(fragment))
     }
 
-    constructor(activity: Activity) {
+    internal constructor(activity: FragmentActivity) {
       helper = PermissionHelper(CompatContext(activity))
     }
 

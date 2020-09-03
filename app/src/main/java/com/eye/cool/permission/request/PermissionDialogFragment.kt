@@ -56,6 +56,11 @@ internal class PermissionDialogFragment : AppCompatDialogFragment() {
     dismissAllowingStateLoss()
   }
 
+  override fun dismissAllowingStateLoss() {
+    super.dismissAllowingStateLoss()
+    sListener = null
+  }
+
   override fun onDestroy() {
     super.onDestroy()
     sListener = null

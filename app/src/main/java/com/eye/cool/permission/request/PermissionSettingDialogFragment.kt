@@ -37,7 +37,10 @@ internal class PermissionSettingDialogFragment : AppCompatDialogFragment() {
     super.onActivityCreated(savedInstanceState)
     val requestInstallPackages = arguments?.getBoolean(REQUEST_INSTALL_PACKAGES, false) ?: false
     if (requestInstallPackages) {
-      val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:${requireContext().packageName}"))
+      val intent = Intent(
+          Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+          Uri.parse("package:${requireContext().packageName}")
+      )
       startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
     } else {
       PermissionSetting().start(this, REQUEST_SETTING_CODE)
@@ -47,12 +50,12 @@ internal class PermissionSettingDialogFragment : AppCompatDialogFragment() {
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
     if (requestCode == REQUEST_INSTALL_PACKAGES_CODE) {
       sRequestInstallPackageListener?.invoke(resultCode == Activity.RESULT_OK)
-    } else {
+    } else if (requestCode == REQUEST_SETTING_CODE) {
       val permissions = arguments?.getStringArray(PERMISSIONS)
       if (permissions.isNullOrEmpty()) {
-        sDeniedPermission?.invoke(null)
+        sPermissionCallback?.invoke(null)
       } else {
-        sDeniedPermission?.invoke(PermissionUtil.getDeniedPermissions(requireContext(), permissions))
+        sPermissionCallback?.invoke(PermissionUtil.getDeniedPermissions(requireContext(), permissions))
       }
     }
     dismissAllowingStateLoss()
@@ -62,9 +65,15 @@ internal class PermissionSettingDialogFragment : AppCompatDialogFragment() {
     super.show(manager, PermissionSettingDialogFragment::class.java.simpleName)
   }
 
+  override fun dismissAllowingStateLoss() {
+    super.dismissAllowingStateLoss()
+    sPermissionCallback = null
+    sRequestInstallPackageListener = null
+  }
+
   override fun onDestroy() {
     super.onDestroy()
-    sDeniedPermission = null
+    sPermissionCallback = null
     sRequestInstallPackageListener = null
   }
 
@@ -75,10 +84,12 @@ internal class PermissionSettingDialogFragment : AppCompatDialogFragment() {
     private const val REQUEST_SETTING_CODE = 6012
     private const val PERMISSIONS = "permissions"
 
-    private var sDeniedPermission: ((Array<String>?) -> Unit)? = null
+    private var sPermissionCallback: ((Array<String>?) -> Unit)? = null
     private var sRequestInstallPackageListener: ((Boolean) -> Unit)? = null
 
-    fun newInstallPackageInstance(callback: ((Boolean) -> Unit)? = null): PermissionSettingDialogFragment {
+    fun newInstallPackageInstance(
+        callback: ((Boolean) -> Unit)? = null
+    ): PermissionSettingDialogFragment {
       sRequestInstallPackageListener = callback
       val fragment = PermissionSettingDialogFragment()
       val bundle = Bundle()
@@ -89,9 +100,9 @@ internal class PermissionSettingDialogFragment : AppCompatDialogFragment() {
 
     fun newInstance(
         permissions: Array<String>,
-        deniedPermission: ((Array<String>?) -> Unit)? = null
+        permissionCallback: ((Array<String>?) -> Unit)? = null
     ): PermissionSettingDialogFragment {
-      sDeniedPermission = deniedPermission
+      sPermissionCallback = permissionCallback
       val fragment = PermissionSettingDialogFragment()
       val bundle = Bundle()
       bundle.putStringArray(PERMISSIONS, permissions)

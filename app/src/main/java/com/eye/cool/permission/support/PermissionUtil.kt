@@ -1,5 +1,6 @@
 package com.eye.cool.permission.support
 
+import android.Manifest
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.pm.PackageManager
@@ -137,10 +138,24 @@ object PermissionUtil {
     val pkManagerClass = packageManager.javaClass
     return try {
       val method = pkManagerClass.getMethod("shouldShowRequestPermissionRationale", String::class.java)
-      if (!method.isAccessible) method.isAccessible = true
+      method.isAccessible = true
       method.invoke(packageManager, permission) as Boolean? ?: false
     } catch (ignored: Exception) {
       false
     }
+  }
+
+  internal fun hasInstallPermissionOnly(permissions: Array<String>): Boolean {
+    val installPermissions = Permission.INSTALL_PACKAGE
+    if (permissions.size > installPermissions.size) return false
+    if (permissions.size == 1) {
+      return permissions[0] == Manifest.permission.INSTALL_PACKAGES
+          || permissions[0] == Manifest.permission.REQUEST_INSTALL_PACKAGES
+    }
+    if (permissions.size == 2) {
+      return installPermissions.contains(permissions[0])
+          && installPermissions.contains(permissions[1])
+    }
+    return false
   }
 }

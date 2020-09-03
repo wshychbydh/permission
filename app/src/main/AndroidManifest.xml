@@ -16,6 +16,13 @@
       android:exported="false"
       android:launchMode="singleInstance"
       android:theme="@style/permission_translate" />
+
+    <activity
+      android:name=".request.PermissionProxyActivity"
+      android:configChanges="keyboardHidden|orientation|screenSize"
+      android:exported="false"
+      android:launchMode="singleInstance"
+      android:theme="@style/permission_proxy" />
   </application>
 
 </manifest>

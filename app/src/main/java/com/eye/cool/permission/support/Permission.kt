@@ -6,21 +6,31 @@ import com.eye.cool.permission.R
 import java.util.*
 
 /**
+ * https://developer.android.com/guide/topics/security/permissions?hl=zh-cn
  * Created by cool on 2017/4/16.
  */
 object Permission {
 
+  /**
+   * android.permission-group.MICROPHONE
+   */
   @JvmStatic
   val MICROPHONE = arrayOf(
       RECORD_AUDIO
   )
 
+  /**
+   * android.permission-group.CALENDAR
+   */
   @JvmStatic
   val CALENDAR = arrayOf(
       READ_CALENDAR,
       WRITE_CALENDAR
   )
 
+  /**
+   * android.permission-group.CONTACTS
+   */
   @JvmStatic
   val CONTACTS = arrayOf(
       READ_CONTACTS,
@@ -28,12 +38,18 @@ object Permission {
       GET_ACCOUNTS
   )
 
+  /**
+   * android.permission-group.LOCATION
+   */
   @JvmStatic
   val LOCATION = arrayOf(
       ACCESS_FINE_LOCATION,
       ACCESS_COARSE_LOCATION
   )
 
+  /**
+   * android.permission-group.CALL_LOG
+   */
   @JvmStatic
   val CALL_LOG = arrayOf(
       READ_CALL_LOG,
@@ -41,10 +57,13 @@ object Permission {
       PROCESS_OUTGOING_CALLS
   )
 
+  /**
+   * android.permission-group.PHONE
+   */
+  @Deprecated("Select the permissions that are more suitable for you")
   @JvmStatic
   val PHONE = arrayOf(
       READ_PHONE_STATE,
-      READ_PHONE_NUMBERS,
       CALL_PHONE,
       ADD_VOICEMAIL,
       USE_SIP,
@@ -53,31 +72,45 @@ object Permission {
       PROCESS_OUTGOING_CALLS
   )
 
+  /**
+   * android.permission-group.SMS
+   */
+  @Deprecated("Select the permissions that are more suitable for you")
   @JvmStatic
   val SMS = arrayOf(
       SEND_SMS,
       RECEIVE_SMS,
       READ_SMS,
       RECEIVE_WAP_PUSH,
-      RECEIVE_MMS
+      RECEIVE_MMS,
   )
 
+  /**
+   * android.permission-group.STORAGE
+   */
   @JvmStatic
   val STORAGE = arrayOf(
       WRITE_EXTERNAL_STORAGE,
       READ_EXTERNAL_STORAGE
   )
 
+  /**
+   * android.permission-group.SENSORS
+   */
   @JvmStatic
   val SENSORS = arrayOf(
       BODY_SENSORS
   )
 
+  /**
+   * android.permission-group.CAMERA
+   */
   @JvmStatic
   val CAMERA = arrayOf(
       android.Manifest.permission.CAMERA
   )
 
+  @Deprecated("Select the permissions that are more suitable for you")
   @JvmStatic
   val INSTALL_PACKAGE = arrayOf(
       INSTALL_PACKAGES,
