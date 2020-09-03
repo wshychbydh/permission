@@ -82,7 +82,7 @@ object Permission {
       RECEIVE_SMS,
       READ_SMS,
       RECEIVE_WAP_PUSH,
-      RECEIVE_MMS,
+      RECEIVE_MMS
   )
 
   /**

@@ -34,6 +34,7 @@ class PermissionChecker(
 
   fun check(scope: CoroutineScope, callback: (Result) -> Unit) {
     scope.launch {
+      compactContext.proxyContext()
       checker(this) {
         compactContext.release()
         callback.invoke(Result(request.permissions, it?.toList()))
