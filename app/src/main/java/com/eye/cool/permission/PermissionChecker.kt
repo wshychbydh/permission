@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.TargetApi
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.annotation.WorkerThread
 import com.eye.cool.permission.checker.Request
 import com.eye.cool.permission.checker.Result
 import com.eye.cool.permission.support.Permission
@@ -20,24 +21,60 @@ class PermissionChecker(
     private val request: Request
 ) {
 
-  private val compactContext = request.context
+  private val ctx = request.context
 
+  /**
+   * @param callback run on ui-thread
+   */
   fun check(callback: Continuation<Result>) {
-    if (request.permissions.isNullOrEmpty()) {
-      callback.resume(Result(request = request.permissions))
-      return
-    }
-    check(CoroutineScope(callback.context)) {
+    request.scope.plus(callback.context)
+    check(request.scope) {
       callback.resume(it)
     }
   }
 
+  /**
+   * @param callback run on ui-thread
+   */
+  fun check(callback: (Result) -> Unit) {
+    check(request.scope, callback)
+  }
+
+  /**
+   * @param scope
+   * @param callback run on ui-thread
+   */
   fun check(scope: CoroutineScope, callback: (Result) -> Unit) {
-    scope.launch {
-      compactContext.proxyContext()
-      checker(this) {
-        compactContext.release()
-        callback.invoke(Result(request.permissions, it?.toList()))
+    scope.launch(Dispatchers.Default) {
+      try {
+        ctx.proxyContext()
+        val denied = checker()
+        val result = Result(request.permissions, denied?.toList())
+        withContext(Dispatchers.Main) {
+          callback.invoke(result)
+        }
+      } finally {
+        request.onDestroy()
+      }
+    }
+  }
+
+  /**
+   * @return run on ui-thread
+   */
+  suspend fun check(
+      scope: CoroutineScope = request.scope
+  ): Result = suspendCoroutine {
+    scope.plus(it.context)
+    scope.launch(Dispatchers.Default) {
+      try {
+        ctx.proxyContext()
+        val denied = checker()
+        withContext(Dispatchers.Main) {
+          it.resume(Result(request.permissions, denied?.toList()))
+        }
+      } finally {
+        request.onDestroy()
       }
     }
   }
@@ -47,113 +84,91 @@ class PermissionChecker(
    * support checks for [camera | recorder | storage]'s permissions,
    * and returns true for all other permissions
    */
-  private suspend fun checker(scope: CoroutineScope, callback: (Array<String>?) -> Unit) {
-    val target = compactContext.context().applicationInfo.targetSdkVersion
-    if (target >= Build.VERSION_CODES.M && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-      withContext(Dispatchers.Main) {
-        requestPermission(callback)
-      }
+  private suspend fun checker(): Array<String>? {
+    if (request.permissions.isNullOrEmpty()) {
+      return null
+    }
+    val target = ctx.context().applicationInfo.targetSdkVersion
+    return if (target >= Build.VERSION_CODES.M
+        && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      requestPermission()
     } else {
-      val deniedPermissions = requestPermissionBelow23(scope).toTypedArray()
-      if (deniedPermissions.isNotEmpty() && request.showRationaleSettingWhenDenied) {
-        withContext(Dispatchers.Main) {
-          request.rationaleSetting.showRationale(compactContext.context(), deniedPermissions) {
-            if (it) {
-              compactContext.startSettingForResult(deniedPermissions) { result ->
-                callback.invoke(result)
-              }
-            } else {
-              callback.invoke(deniedPermissions)
-            }
-          }
-        }
-      } else {
-        callback.invoke(deniedPermissions)
+      val denied = requestPermissionBelow23().toTypedArray()
+      if (denied.isNullOrEmpty()) return null
+      if (request.showRationaleSettingWhenDenied) {
+        val allowed = request.rationaleSetting.request(request.scope, ctx.context(), denied)
+        if (allowed) ctx.startSettingForResult(denied)
       }
+      denied
     }
   }
 
-  private suspend fun requestPermissionBelow23(
-      scope: CoroutineScope
-  ) = suspendCoroutine<List<String>> {
-    scope.launch(Dispatchers.IO) {
-      val deniedPermissions = arrayListOf<String>()
-      request.permissions.forEach { permission ->
-        val available = when (permission) {
-          in Permission.CAMERA -> {
-            PermissionUtil.isCameraAvailable()
-          }
-
-          in Permission.STORAGE -> {
-            PermissionUtil.isCacheDirAvailable(compactContext.context())
-                && PermissionUtil.isExternalDirAvailable()
-          }
-
-          in Permission.MICROPHONE -> {
-            PermissionUtil.isRecordAvailable()
-          }
-
-          else -> true //fixme Other permission's checking
+  private fun requestPermissionBelow23(): List<String> {
+    val deniedPermissions = arrayListOf<String>()
+    request.permissions.forEach { permission ->
+      val available = when (permission) {
+        in Permission.CAMERA -> {
+          PermissionUtil.isCameraAvailable()
         }
-        if (!available) {
-          deniedPermissions.add(permission)
+
+        in Permission.STORAGE -> {
+          PermissionUtil.isCacheDirAvailable(ctx.context())
+              && PermissionUtil.isExternalDirAvailable()
         }
+
+        in Permission.MICROPHONE -> {
+          PermissionUtil.isRecordAvailable()
+        }
+
+        else -> true //fixme Other permission's checking
       }
-      it.resume(deniedPermissions)
+      if (!available) {
+        deniedPermissions.add(permission)
+      }
     }
+    return deniedPermissions
   }
 
   @TargetApi(Build.VERSION_CODES.M)
-  private fun requestPermission(callback: (Array<String>?) -> Unit) {
-    val deniedPermissions = PermissionUtil.getDeniedPermissions(
-        compactContext.context(),
+  private suspend fun requestPermission(): Array<String>? {
+    val denied = PermissionUtil.getDeniedPermissions(
+        ctx.context(),
         request.permissions.toTypedArray()
     )
-    when {
-      deniedPermissions.isEmpty() -> {
-        callback.invoke(null)
-      }
-      else -> filterPermissions(callback, deniedPermissions)
+    return when {
+      denied.isEmpty() -> null
+      else -> filterPermissions(denied)
     }
   }
 
-  private fun filterPermissions(callback: (Array<String>?) -> Unit, permissions: Array<String>) {
-    requestInstallPackage(permissions) { filtered ->
-      when {
-        filtered.isNullOrEmpty() -> {
-          callback.invoke(null)
-        }
+  private suspend fun filterPermissions(permissions: Array<String>): Array<String>? {
 
-        PermissionUtil.hasInstallPermissionOnly(permissions) -> {
-          callback.invoke(filtered)
-        }
+    val filtered = requestInstallPackage(permissions)
 
-        request.showRationaleWhenRequest -> {
-          request.rationale.showRationale(compactContext.context(), filtered) {
-            if (it) {
-              compactContext.requestPermission(filtered) { requestPermissions, grantResults ->
-                verifyPermissions(callback, requestPermissions, grantResults)
-              }
-            } else {
-              callback.invoke(filtered)
-            }
-          }
-        }
+    return when {
+      filtered.isNullOrEmpty() -> null
 
-        else -> {
-          compactContext.requestPermission(filtered) { requestPermissions, grantResults ->
-            verifyPermissions(callback, requestPermissions, grantResults)
-          }
-        }
+      PermissionUtil.hasInstallPermissionOnly(permissions) -> filtered
+
+      request.showRationaleWhenRequest -> {
+        val result = request.rationale.request(request.scope, ctx.context(), filtered)
+        return if (result) {
+          val grantResults = ctx.requestPermission(filtered)
+          return verifyPermissions(filtered, grantResults)
+        } else filtered
+      }
+
+      else -> {
+        val grantResults = ctx.requestPermission(filtered)
+        return verifyPermissions(filtered, grantResults)
       }
     }
   }
 
-  private fun verifyPermissions(
-      callback: (Array<String>?) -> Unit,
+  private suspend fun verifyPermissions(
       permissions: Array<String>,
       grantResults: IntArray
-  ) {
+  ): Array<String>? {
     // Verify that each required permissions has been granted, otherwise all granted
     val deniedPermissions = arrayListOf<String>()
     grantResults.forEachIndexed { index, result ->
@@ -164,78 +179,51 @@ class PermissionChecker(
 
     val deniedArray = deniedPermissions.toTypedArray()
 
-    when {
-      deniedArray.isEmpty() -> {
-        callback.invoke(null)
-      }
+    return when {
+      deniedArray.isEmpty() -> null
 
       request.showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray) -> {
-        request.rationaleSetting.showRationale(compactContext.context(), deniedArray) {
-          if (it) {
-            compactContext.startSettingForResult(deniedArray) { result ->
-              if (result.isNullOrEmpty()) {
-                callback.invoke(null)
-              } else {
-                callback.invoke(result)
-              }
-            }
-          } else {
-            callback.invoke(deniedArray)
-          }
-        }
+        val result = request.rationaleSetting.request(request.scope, ctx.context(), deniedArray)
+        if (result) ctx.startSettingForResult(deniedArray) else deniedArray
       }
 
-      else -> {
-        callback.invoke(deniedArray)
-      }
+      else -> deniedArray
     }
   }
 
-  private fun requestInstallPackage(
-      permissions: Array<String>,
-      callback: (Array<String>) -> Unit
-  ) {
-
-    when {
+  private suspend fun requestInstallPackage(permissions: Array<String>): Array<String> {
+    return when {
       !permissions.contains(Manifest.permission.REQUEST_INSTALL_PACKAGES)
-          && !permissions.contains(Manifest.permission.INSTALL_PACKAGES) -> {
-        callback.invoke(permissions)
-      }
+          && !permissions.contains(Manifest.permission.INSTALL_PACKAGES) -> permissions
 
       Build.VERSION.SDK_INT < Build.VERSION_CODES.O
-          || compactContext.context().packageManager.canRequestPackageInstalls() -> {
+          || ctx.context().packageManager.canRequestPackageInstalls() -> {
         val temp = permissions.toMutableList()
         temp.removeAll(Permission.INSTALL_PACKAGE)
-        callback.invoke(temp.toTypedArray())
+        return temp.toTypedArray()
       }
 
       request.showInstallRationaleWhenRequest -> {
-        request.rationaleInstallPackagesSetting.showRationale(compactContext.context(), permissions) {
-          if (it) {
-            compactContext.requestInstallPackage { result ->
-              if (result) {
-                val temp = permissions.toMutableList()
-                temp.removeAll(Permission.INSTALL_PACKAGE)
-                callback.invoke(temp.toTypedArray())
-              } else {
-                callback.invoke(permissions)
-              }
-            }
-          } else {
-            callback.invoke(permissions)
-          }
+        var allowed = request.rationaleInstallPackageSetting.request(
+            request.scope,
+            ctx.context(),
+            permissions
+        )
+        if (allowed && ctx.requestInstallPackage()) {
+          val temp = permissions.toMutableList()
+          temp.removeAll(Permission.INSTALL_PACKAGE)
+          return temp.toTypedArray()
         }
+        return permissions
       }
 
       else -> {
-        compactContext.requestInstallPackage { result ->
-          if (result) {
-            val temp = permissions.toMutableList()
-            temp.removeAll(Permission.INSTALL_PACKAGE)
-            callback.invoke(temp.toTypedArray())
-          } else {
-            callback.invoke(permissions)
-          }
+        return if (ctx.requestInstallPackage()) {
+          val temp = permissions.toMutableList()
+          temp.removeAll(Permission.INSTALL_PACKAGE)
+          temp.toTypedArray()
+        } else {
+          permissions
         }
       }
     }
@@ -246,7 +234,7 @@ class PermissionChecker(
    */
   private fun hasAlwaysDeniedPermission(deniedPermissions: Array<String>): Boolean {
     for (permission in deniedPermissions) {
-      if (!PermissionUtil.isNeedShowRationalePermission(compactContext.context(), permission)) {
+      if (!PermissionUtil.isNeedShowRationalePermission(ctx.context(), permission)) {
         return true
       }
     }

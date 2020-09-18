@@ -31,7 +31,7 @@
 2. 在项目的build.gradle中添加依赖
 ```
     dependencies {
-        implementation 'com.github.wshychbydh:permission:tag'
+        implementation 'com.github.wshychbydh:permission:Tag'
     }
 ```
 
@@ -67,57 +67,34 @@
 
 ### 示例：
 
-```
-    PermissionHelper.Builder(context)
-         .permission(permission)                       //请求的单个权限
-         .permissions(permissions)                     //请求的多个权限
-         .rationale(rationale)                         //权限提示弹框（可选）
-         .rationaleSetting(rationale)                  //引导设置弹框（可选）
-         .rationaleInstallPackagesSetting(rationale)   //引导设置安装未知来源应用弹框（可选）
-         .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
-         .showRationaleWhenRequest(boolean)            //是否弹框提示需要动态申请的权限（默认false）
-         .showInstallRationaleWhenRequest(boolean)     //是否弹框提示安装APK需要申请的权限（默认false）
-         .permissionCallback {                         //授权结果回调（必填，否则无回调）
-           if (it) {
-             // 请求权限成功
-           } else {
-             // 请求权限失败
-           }
-         }
-         .deniedPermissionCallback { deniedPermissions-> //仅在授权失败时返回未授权的权限 （可选）
-            //  返回授权失败的权限，可自行处理
-         }
-         .build()
-         .request()
-```
-**推荐一、**
+1. 使用PermissionChecker
 ```
     PermissionChecker(
-        Request.Builder(this)
+        Request.Builder(context)
             .permission(permission)                       //请求的单个权限
             .permissions(permissions)                     //请求的多个权限
             .rationale(rationale)                         //权限提示弹框（可选）
             .rationaleSetting(rationale)                  //引导设置弹框（可选）
-            .rationaleInstallPackagesSetting(rationale)   //引导设置安装未知来源应用弹框（可选）
+            .rationaleInstallPackageSetting(rationale)    //引导设置安装未知来源应用弹框（可选）
             .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
             .showRationaleWhenRequest(boolean)            //是否弹框提示需要动态申请的权限（默认false）
             .showInstallRationaleWhenRequest(boolean)     //是否弹框提示安装APK需要申请的权限（默认false）
             .build()
-    ).check(CoroutineScope) {
+    ).check {
       //todo
       //根据返回的result.isSucceed()判断请求的权限是否成功
     }
 ```
 
-**推荐二、**
+2. 使用扩展方法 **（推荐）**
 ```
     val result = permissionForResult(
-          Request.Builder(this@PermissionTestDialogFragment)
+          Request.Builder(context)
               .permission(permission)                       //请求的单个权限
               .permissions(permissions)                     //请求的多个权限
               .rationale(rationale)                         //权限提示弹框（可选）
               .rationaleSetting(rationale)                  //引导设置弹框（可选）
-              .rationaleInstallPackagesSetting(rationale)   //引导设置安装未知来源应用弹框（可选）
+              .rationaleInstallPackageSetting(rationale)    //引导设置安装未知来源应用弹框（可选）
               .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
               .showRationaleWhenRequest(boolean)            //是否弹框提示需要动态申请的权限（默认false）
               .showInstallRationaleWhenRequest(boolean)     //是否弹框提示安装APK需要申请的权限（默认false）

@@ -7,7 +7,7 @@ import com.eye.cool.permission.R
 /**
  * Created by cool on 2018/4/20.
  */
-internal class InstallPackagesSettingRationale : Rationale {
+internal class InstallPackageSettingRationale : Rationale {
 
   override fun showRationale(
       context: Context,

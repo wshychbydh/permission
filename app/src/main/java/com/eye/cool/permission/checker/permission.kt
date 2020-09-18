@@ -9,6 +9,9 @@ import kotlin.coroutines.suspendCoroutine
  * Created by ycb on 2020/8/31
  */
 
+/**
+ * @return run on ui-thread
+ */
 suspend fun Context.permissionForResult(
     permission: String
 ) = suspendCoroutine<Result> {
@@ -17,6 +20,9 @@ suspend fun Context.permissionForResult(
   ).check(it)
 }
 
+/**
+ * @return run on ui-thread
+ */
 suspend fun Context.permissionForResult(
     permissions: Array<String>
 ) = suspendCoroutine<Result> {
@@ -25,6 +31,9 @@ suspend fun Context.permissionForResult(
   ).check(it)
 }
 
+/**
+ * @return run on ui-thread
+ */
 suspend fun Context.permissionForResult(
     permissions: Collection<String>
 ) = suspendCoroutine<Result> {
@@ -33,33 +42,30 @@ suspend fun Context.permissionForResult(
   ).check(it)
 }
 
-suspend fun permissionForResult(
-    fragment: Fragment,
+/**
+ * @return run on ui-thread
+ */
+suspend fun Fragment.permissionForResult(
     permission: String
-) = suspendCoroutine<Result> {
-  PermissionChecker(
-      Request.Builder(fragment).permission(permission).build()
-  ).check(it)
-}
+) = requireActivity().permissionForResult(permission)
 
-suspend fun permissionForResult(
-    fragment: Fragment,
+/**
+ * @return run on ui-thread
+ */
+suspend fun Fragment.permissionForResult(
     permissions: Array<String>
-) = suspendCoroutine<Result> {
-  PermissionChecker(
-      Request.Builder(fragment).permissions(permissions).build()
-  ).check(it)
-}
+) = requireActivity().permissionForResult(permissions)
 
-suspend fun permissionForResult(
-    fragment: Fragment,
+/**
+ * @return run on ui-thread
+ */
+suspend fun Fragment.permissionForResult(
     permissions: Collection<String>
-) = suspendCoroutine<Result> {
-  PermissionChecker(
-      Request.Builder(fragment).permissions(permissions).build()
-  ).check(it)
-}
+) = requireActivity().permissionForResult(permissions)
 
+/**
+ * @return run on ui-thread
+ */
 suspend fun permissionForResult(
     builder: Request
 ) = suspendCoroutine<Result> {
