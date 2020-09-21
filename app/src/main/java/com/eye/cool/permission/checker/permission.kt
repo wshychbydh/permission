@@ -3,6 +3,7 @@ package com.eye.cool.permission.checker
 import android.content.Context
 import androidx.fragment.app.Fragment
 import com.eye.cool.permission.PermissionChecker
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.suspendCoroutine
 
 /**
@@ -14,7 +15,7 @@ import kotlin.coroutines.suspendCoroutine
  */
 suspend fun Context.permissionForResult(
     permission: String
-) = suspendCoroutine<Result> {
+) = suspendCancellableCoroutine<Result> {
   PermissionChecker(
       Request.Builder(this).permission(permission).build()
   ).check(it)
@@ -25,7 +26,7 @@ suspend fun Context.permissionForResult(
  */
 suspend fun Context.permissionForResult(
     permissions: Array<String>
-) = suspendCoroutine<Result> {
+) = suspendCancellableCoroutine<Result> {
   PermissionChecker(
       Request.Builder(this).permissions(permissions).build()
   ).check(it)
@@ -36,7 +37,7 @@ suspend fun Context.permissionForResult(
  */
 suspend fun Context.permissionForResult(
     permissions: Collection<String>
-) = suspendCoroutine<Result> {
+) = suspendCancellableCoroutine<Result> {
   PermissionChecker(
       Request.Builder(this).permissions(permissions).build()
   ).check(it)
@@ -68,6 +69,6 @@ suspend fun Fragment.permissionForResult(
  */
 suspend fun permissionForResult(
     builder: Request
-) = suspendCoroutine<Result> {
+) = suspendCancellableCoroutine<Result> {
   PermissionChecker(builder).check(it)
 }

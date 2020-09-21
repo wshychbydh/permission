@@ -121,7 +121,10 @@ object Permission {
    * Turn permissions into text.
    */
   @JvmStatic
-  fun transformText(context: Context, vararg permissions: String): List<String> {
+  fun transformText(
+      context: Context,
+      vararg permissions: String
+  ): List<String> {
     return transformText(context, listOf(*permissions))
   }
 
@@ -129,7 +132,10 @@ object Permission {
    * Turn permissions into text.
    */
   @JvmStatic
-  fun transformText(context: Context, vararg groups: Array<String>): List<String> {
+  fun transformText(
+      context: Context,
+      vararg groups: Array<String>
+  ): List<String> {
     val permissionList = ArrayList<String>()
     for (group in groups) {
       permissionList.addAll(listOf(*group))
@@ -141,7 +147,10 @@ object Permission {
    * Turn permissions into text.
    */
   @JvmStatic
-  fun transformText(context: Context, permissions: List<String>): List<String> {
+  fun transformText(
+      context: Context,
+      permissions: List<String>
+  ): List<String> {
     val textList = ArrayList<String>()
     for (permission in permissions) {
       val result = translates[permission]
@@ -165,7 +174,11 @@ object Permission {
    * @param useCustom {@link addTranslateText}
    */
   @JvmStatic
-  fun transformText(context: Context, permission: String, useCustom: Boolean = true): String {
+  fun transformText(
+      context: Context,
+      permission: String,
+      useCustom: Boolean = true
+  ): String {
 
     if (useCustom) {
       val result = translates[permission]

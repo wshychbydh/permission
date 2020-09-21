@@ -26,10 +26,10 @@ class PermissionChecker(
   /**
    * @param callback run on ui-thread
    */
-  fun check(callback: Continuation<Result>) {
+  fun check(callback: CancellableContinuation<Result>) {
     request.scope.plus(callback.context)
     check(request.scope) {
-      callback.resume(it)
+      if (callback.isActive) callback.resume(it)
     }
   }
 
@@ -65,7 +65,6 @@ class PermissionChecker(
   suspend fun check(
       scope: CoroutineScope = request.scope
   ): Result = suspendCoroutine {
-    scope.plus(it.context)
     scope.launch(Dispatchers.Default) {
       try {
         ctx.proxyContext()
