@@ -9,6 +9,7 @@ import com.eye.cool.permission.checker.Request
 import com.eye.cool.permission.checker.Result
 import com.eye.cool.permission.support.Permission
 import com.eye.cool.permission.support.PermissionUtil
+import com.eye.cool.permission.support.complete
 import kotlinx.coroutines.*
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
@@ -29,7 +30,7 @@ class PermissionChecker(
   fun check(callback: CancellableContinuation<Result>) {
     request.scope.plus(callback.context)
     check(request.scope) {
-      if (callback.isActive) callback.resume(it)
+      callback.complete(it)
     }
   }
 
@@ -64,13 +65,13 @@ class PermissionChecker(
    */
   suspend fun check(
       scope: CoroutineScope = request.scope
-  ): Result = suspendCoroutine {
+  ): Result = suspendCancellableCoroutine {
     scope.launch(Dispatchers.Default) {
       try {
         ctx.proxyContext()
         val denied = checker()
         withContext(Dispatchers.Main) {
-          it.resume(Result(request.permissions, denied?.toList()))
+          it.complete(Result(request.permissions, denied?.toList()))
         }
       } finally {
         request.onDestroy()
@@ -96,7 +97,7 @@ class PermissionChecker(
       if (denied.isNullOrEmpty()) return null
       if (request.showRationaleSettingWhenDenied) {
         val allowed = request.rationaleSetting.request(request.scope, ctx.context(), denied)
-        if (allowed) ctx.startSettingForResult(denied)
+        if (allowed) return ctx.startSettingForResult(denied)
       }
       denied
     }

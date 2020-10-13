@@ -1,10 +1,8 @@
 package com.eye.cool.permission.rationale
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.eye.cool.permission.support.complete
+import kotlinx.coroutines.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -19,15 +17,11 @@ internal class RationaleDelegate(
       scope: CoroutineScope,
       context: Context,
       permissions: Array<String>
-  ) = suspendCoroutine<Boolean> {
+  ) = suspendCancellableCoroutine<Boolean> {
     scope.launch(Dispatchers.Main) {
       rationale.showRationale(context, permissions) { result ->
         scope.launch(Dispatchers.Default) {
-          if (result) {
-            it.resume(true)
-          } else {
-            it.resume(false)
-          }
+          it.complete(result)
         }
       }
     }

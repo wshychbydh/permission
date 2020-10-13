@@ -14,19 +14,21 @@ import android.view.View
 import android.view.WindowManager
 import com.eye.cool.permission.support.PermissionSetting
 import com.eye.cool.permission.support.PermissionUtil
+import com.eye.cool.permission.support.complete
+import kotlinx.coroutines.CancellableContinuation
 
 /**
  * Request permissions.
  * Created cool on 2018/4/16.
  */
- internal class PermissionSettingActivity : Activity() {
+internal class PermissionSettingActivity : Activity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
     invasionStatusBar(this)
-    val requestInstallPackages = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
-    if (requestInstallPackages) {
+    val requestInstallPkg = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
+    if (requestInstallPkg) {
       val intent = Intent(
           Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
           Uri.parse("package:$packageName")
@@ -34,7 +36,7 @@ import com.eye.cool.permission.support.PermissionUtil
       if (intent.resolveActivity(packageManager) != null) {
         startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
       } else {
-        sRequestInstallPackageListener?.invoke(false)
+        sRequestInstallPackageListener?.complete(false)
         finish()
       }
     } else {
@@ -52,17 +54,16 @@ import com.eye.cool.permission.support.PermissionUtil
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         result = result or packageManager.canRequestPackageInstalls()
       }
-      sRequestInstallPackageListener?.invoke(result)
+      sRequestInstallPackageListener?.complete(result)
     } else if (requestCode == REQUEST_SETTING_CODE) {
-      val permissions = intent.getStringArrayExtra(PERMISSIONS)
+      var permissions = intent.getStringArrayExtra(PERMISSIONS)
       if (permissions.isNullOrEmpty()) {
-        sPermissionCallback?.invoke(null)
+        sDeniedPermissionCallback?.complete(null)
       } else {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-          sPermissionCallback?.invoke(PermissionUtil.getDeniedPermissions(this, permissions))
-        } else {
-          sPermissionCallback?.invoke(permissions)
-        }
+        permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+          PermissionUtil.getDeniedPermissions(this, permissions)
+        } else permissions
+        sDeniedPermissionCallback?.complete(permissions)
       }
     }
     finish()
@@ -70,7 +71,7 @@ import com.eye.cool.permission.support.PermissionUtil
 
   override fun onDestroy() {
     super.onDestroy()
-    sPermissionCallback = null
+    sDeniedPermissionCallback = null
     sRequestInstallPackageListener = null
   }
 
@@ -82,12 +83,15 @@ import com.eye.cool.permission.support.PermissionUtil
     private const val REQUEST_INSTALL_PACKAGES = "request_install_package"
     private const val REQUEST_INSTALL_PACKAGES_CODE = 7011
 
-    private var sPermissionCallback: ((Array<String>?) -> Unit)? = null
-    private var sRequestInstallPackageListener: ((Boolean) -> Unit)? = null
+    private var sDeniedPermissionCallback: CancellableContinuation<Array<String>?>? = null
+    private var sRequestInstallPackageListener: CancellableContinuation<Boolean>? = null
 
     @TargetApi(Build.VERSION_CODES.O)
-    fun requestInstallPackages(context: Context, callback: ((Boolean) -> Unit)? = null) {
-      sRequestInstallPackageListener = callback
+    fun delegateInstallPackage(
+        context: Context,
+        requestInstallPackageCallback: CancellableContinuation<Boolean>
+    ) {
+      sRequestInstallPackageListener = requestInstallPackageCallback
       val intent = Intent(context, PermissionActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       intent.putExtra(REQUEST_INSTALL_PACKAGES, true)
@@ -97,12 +101,12 @@ import com.eye.cool.permission.support.PermissionUtil
     /**
      * Request for permissions.
      */
-    fun startSetting(
+    fun delegateSetting(
         context: Context,
         permissions: Array<String>,
-        permissionCallback: ((Array<String>?) -> Unit)? = null
+        deniedPermissionCallback: CancellableContinuation<Array<String>?>
     ) {
-      sPermissionCallback = permissionCallback
+      sDeniedPermissionCallback = deniedPermissionCallback
       val intent = Intent(context, PermissionSettingActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       intent.putExtra(PERMISSIONS, permissions)

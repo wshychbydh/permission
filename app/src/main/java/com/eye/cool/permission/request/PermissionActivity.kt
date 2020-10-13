@@ -10,6 +10,8 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
+import com.eye.cool.permission.support.complete
+import kotlinx.coroutines.CancellableContinuation
 
 /**
  * Request permissions.
@@ -31,8 +33,12 @@ internal class PermissionActivity : Activity() {
     }
   }
 
-  override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-    sPermissionListener?.invoke(permissions, grantResults)
+  override fun onRequestPermissionsResult(
+      requestCode: Int,
+      permissions: Array<String>,
+      grantResults: IntArray
+  ) {
+    sGrantResultsCallback?.complete(grantResults)
     finish()
   }
 
@@ -42,14 +48,14 @@ internal class PermissionActivity : Activity() {
 
   override fun onDestroy() {
     super.onDestroy()
-    sPermissionListener = null
+    sGrantResultsCallback = null
   }
 
   companion object {
 
     private const val REQUEST_PERMISSIONS = "permissions"
 
-    private var sPermissionListener: ((permissions: Array<String>, grantResults: IntArray) -> Unit)? = null
+    private var sGrantResultsCallback: CancellableContinuation<IntArray>? = null
 
     /**
      * Request for permissions.
@@ -57,9 +63,9 @@ internal class PermissionActivity : Activity() {
     fun requestPermission(
         context: Context,
         permissions: Array<String>,
-        permissionListener: ((permissions: Array<String>, grantResults: IntArray) -> Unit)? = null
+        grantResultsCallback: CancellableContinuation<IntArray>
     ) {
-      sPermissionListener = permissionListener
+      sGrantResultsCallback = grantResultsCallback
       val intent = Intent(context, PermissionActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       intent.putExtra(REQUEST_PERMISSIONS, permissions)

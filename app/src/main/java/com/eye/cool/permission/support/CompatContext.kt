@@ -5,9 +5,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.eye.cool.permission.request.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 /**
  *Created by ycb on 2019/12/17 0017
@@ -41,7 +42,7 @@ internal class CompatContext {
     if (activity == null) {
       PermissionProxyActivity.launch(context()) { activity ->
         proxyActivity = activity
-        if (it.isActive) it.resume(this)
+        it.complete(this)
       }
     } else {
       it.resume(this)
@@ -53,25 +54,19 @@ internal class CompatContext {
   ) = suspendCancellableCoroutine<Array<String>?> {
 
     if (permissions.isEmpty()) {
-      it.resume(null)
+      it.complete(null)
       return@suspendCancellableCoroutine
     }
 
     when {
       proxyActivity != null -> {
-        PermissionSettingDialogFragment.newInstance(permissions) { result ->
-          if (it.isActive) it.resume(result)
-        }.show(proxyActivity!!.supportFragmentManager)
+        PermissionSettingFragment.delegate(proxyActivity!!, permissions, it)
       }
       context != null -> {
-        PermissionSettingActivity.startSetting(context(), permissions) { result ->
-          if (it.isActive) it.resume(result)
-        }
+        PermissionSettingActivity.delegateSetting(context(), permissions, it)
       }
       activity != null -> {
-        PermissionSettingDialogFragment.newInstance(permissions) { result ->
-          if (it.isActive) it.resume(result)
-        }.show(activity!!.supportFragmentManager)
+        PermissionSettingFragment.delegate(activity!!, permissions, it)
       }
       else -> throw IllegalStateException("CompatContext init error")
     }
@@ -80,19 +75,13 @@ internal class CompatContext {
   suspend fun requestInstallPackage() = suspendCancellableCoroutine<Boolean> {
     when {
       proxyActivity != null -> {
-        PermissionSettingDialogFragment.newInstallPackageInstance { result ->
-          if (it.isActive) it.resume(result)
-        }.show(proxyActivity!!.supportFragmentManager)
+        PermissionSettingFragment.delegateInstallPackage(proxyActivity!!, it)
       }
       context != null -> {
-        PermissionSettingActivity.requestInstallPackages(context()) { result ->
-          if (it.isActive) it.resume(result)
-        }
+        PermissionSettingActivity.delegateInstallPackage(context(), it)
       }
       activity != null -> {
-        PermissionSettingDialogFragment.newInstallPackageInstance() { result ->
-          if (it.isActive) it.resume(result)
-        }.show(activity!!.supportFragmentManager)
+        PermissionSettingFragment.delegateInstallPackage(activity!!, it)
       }
       else -> throw IllegalStateException("CompatContext init error")
     }
@@ -103,19 +92,13 @@ internal class CompatContext {
   ) = suspendCancellableCoroutine<IntArray> {
     when {
       proxyActivity != null -> {
-        PermissionDialogFragment.newInstance(permissions) { _, grantResults ->
-          if (it.isActive) it.resume(grantResults)
-        }.show(proxyActivity!!.supportFragmentManager)
+        PermissionFragment.delegate(proxyActivity!!, permissions, it)
       }
       context != null -> {
-        PermissionActivity.requestPermission(context(), permissions) { _, grantResults ->
-          if (it.isActive) it.resume(grantResults)
-        }
+        PermissionActivity.requestPermission(context(), permissions, it)
       }
       activity != null -> {
-        PermissionDialogFragment.newInstance(permissions) { _, grantResults ->
-          if (it.isActive) it.resume(grantResults)
-        }.show(activity!!.supportFragmentManager)
+        PermissionFragment.delegate(activity!!, permissions, it)
       }
       else -> throw IllegalStateException("CompatContext init error")
     }

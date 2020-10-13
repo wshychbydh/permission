@@ -1,6 +1,7 @@
 package com.eye.cool.permission.rationale
 
 import android.content.Context
+import androidx.annotation.UiThread
 
 /**
  * Created by cool on 2018/4/16.
@@ -14,6 +15,7 @@ interface Rationale {
    * @param permissions show rationale permissions.
    * @param callback result, Only means which button was clicked
    */
+  @UiThread
   fun showRationale(
       context: Context,
       permissions: Array<String>,
