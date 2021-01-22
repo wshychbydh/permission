@@ -3,6 +3,7 @@ package com.eye.cool.permission.support
 import android.Manifest
 import android.annotation.TargetApi
 import android.content.Context
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.hardware.Camera
 import android.media.AudioFormat
@@ -11,6 +12,7 @@ import android.media.MediaRecorder
 import android.os.Build
 import android.os.Environment
 import android.os.StrictMode
+
 
 /**
  *Created by ycb on 2019/9/3 0003
@@ -52,6 +54,21 @@ object PermissionUtil {
   @JvmStatic
   fun isExternalStorageWritable(): Boolean {
     return Environment.getExternalStorageState() == Environment.MEDIA_MOUNTED
+  }
+
+  /**
+   * Get registered permissions in AndroidManifest
+   */
+  @JvmStatic
+  fun getRequestedPermissions(context: Context): Array<String>? {
+    try {
+      val packageInfo: PackageInfo = context.packageManager
+          .getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
+      return packageInfo.requestedPermissions
+    } catch (e: PackageManager.NameNotFoundException) {
+      e.printStackTrace()
+    }
+    return null
   }
 
   /**

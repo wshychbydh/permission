@@ -1,10 +1,9 @@
 package com.eye.cool.permission.checker
 
-import android.content.Context
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import com.eye.cool.permission.PermissionChecker
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.suspendCoroutine
 
 /**
  * Created by ycb on 2020/8/31
@@ -13,7 +12,7 @@ import kotlin.coroutines.suspendCoroutine
 /**
  * @return run on ui-thread
  */
-suspend fun Context.permissionForResult(
+suspend fun FragmentActivity.permissionForResult(
     permission: String
 ) = suspendCancellableCoroutine<Result> {
   PermissionChecker(
@@ -24,7 +23,7 @@ suspend fun Context.permissionForResult(
 /**
  * @return run on ui-thread
  */
-suspend fun Context.permissionForResult(
+suspend fun FragmentActivity.permissionForResult(
     permissions: Array<String>
 ) = suspendCancellableCoroutine<Result> {
   PermissionChecker(
@@ -35,7 +34,7 @@ suspend fun Context.permissionForResult(
 /**
  * @return run on ui-thread
  */
-suspend fun Context.permissionForResult(
+suspend fun FragmentActivity.permissionForResult(
     permissions: Collection<String>
 ) = suspendCancellableCoroutine<Result> {
   PermissionChecker(
