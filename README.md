@@ -6,7 +6,7 @@
 
 * 支持6.0以上运行时权限
 
-* 支持6.0以下存储权限，照相机权限，录音权限，其他返回已授权
+* 支持6.0以下存储/相机/录音权限，其他根据AndroidManifest是否已注册返回
 
 * 支持8.0以上的安装包权限
 
@@ -20,7 +20,7 @@
 
 ### 使用方法：
 
-1. 在root目录的build.gradle目录中添加
+1、 在root目录的build.gradle目录中添加
 ```
     allprojects {
         repositories {
@@ -30,14 +30,14 @@
     }
 ```
 
-2. 在项目的build.gradle中添加依赖
+2、 在项目的build.gradle中添加依赖
 ```
     dependencies {
         implementation 'com.github.wshychbydh:permission:Tag'
     }
 ```
 
-3. 注意事项：
+3、 注意事项：
 
   - 如果编译的时候报重复的'META-INF/app_release.kotlin_module'时，在app的build.gradle文件的android下添加
 ```
@@ -86,7 +86,7 @@
 
 #### 使用
 
-1.[PermissionChecker](app/src/main/java/com/eye/cool/permission/PermissionChecker.kt)
+* [PermissionChecker](app/src/main/java/com/eye/cool/permission/PermissionChecker.kt)
 ```kotlin
     PermissionChecker(request).check {
       //todo
@@ -94,7 +94,7 @@
     }
 ```
 
-2.[扩展](app/src/main/java/com/eye/cool/permission/checker/permission.kt) **（推荐）**
+* [扩展](app/src/main/java/com/eye/cool/permission/checker/permission.kt) **（推荐）**
 ```kotlin
     val result = permissionForResult(request)
     //todo

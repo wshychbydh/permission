@@ -107,22 +107,24 @@ class PermissionChecker(
 
   private fun requestPermissionBelow23(): List<String> {
     val deniedPermissions = arrayListOf<String>()
+    val registeredPermissions = PermissionUtil.getRequestedPermissions(ctx.context())
     request.permissions.forEach { permission ->
+      val registered = registeredPermissions.contains(permission)
       val available = when (permission) {
         in Permission.CAMERA -> {
-          PermissionUtil.isCameraAvailable()
+          registered && PermissionUtil.isCameraAvailable()
         }
 
         in Permission.STORAGE -> {
-          PermissionUtil.isCacheDirAvailable(ctx.context())
+          registered && PermissionUtil.isCacheDirAvailable(ctx.context())
               && PermissionUtil.isExternalDirAvailable()
         }
 
         in Permission.MICROPHONE -> {
-          PermissionUtil.isRecordAvailable()
+          registered && PermissionUtil.isRecordAvailable()
         }
 
-        else -> true //fixme Other permission's checking
+        else -> registered
       }
       if (!available) {
         deniedPermissions.add(permission)
