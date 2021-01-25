@@ -1,6 +1,8 @@
 package com.eye.cool.permission.support
 
 import android.content.Context
+import android.os.Build
+import android.os.Environment
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -99,6 +101,29 @@ internal class CompatContext {
       }
       activity != null -> {
         PermissionFragment.delegate(activity!!, permissions, it)
+      }
+      else -> throw IllegalStateException("CompatContext init error")
+    }
+  }
+
+  suspend fun requestAllFileAccess() = suspendCancellableCoroutine<Boolean> {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+      it.complete(true)
+      return@suspendCancellableCoroutine
+    }
+    if (Environment.isExternalStorageManager()) {
+      it.complete(true)
+      return@suspendCancellableCoroutine
+    }
+    when {
+      proxyActivity != null -> {
+        PermissionFileAccessFragment.delegate(proxyActivity!!, it)
+      }
+      context != null -> {
+        PermissionSettingActivity.delegateAllFileAccessSetting(context(), it)
+      }
+      activity != null -> {
+        PermissionFileAccessFragment.delegate(activity!!, it)
       }
       else -> throw IllegalStateException("CompatContext init error")
     }

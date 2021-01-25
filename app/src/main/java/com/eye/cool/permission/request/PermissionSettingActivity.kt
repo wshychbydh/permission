@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.View
@@ -29,16 +30,23 @@ internal class PermissionSettingActivity : Activity() {
     invasionStatusBar(this)
     val requestInstallPkg = intent.getBooleanExtra(REQUEST_INSTALL_PACKAGES, false)
     if (requestInstallPkg) {
-      val intent = Intent(
-          Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-          Uri.parse("package:$packageName")
-      )
       if (intent.resolveActivity(packageManager) != null) {
-        startActivityForResult(intent, REQUEST_INSTALL_PACKAGES_CODE)
+        startActivityForResult(
+            Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:$packageName")
+            ),
+            REQUEST_INSTALL_PACKAGES_CODE
+        )
       } else {
-        sRequestInstallPackageListener?.complete(false)
+        sRequestInstallPackageCallback?.complete(false)
         finish()
       }
+    } else if (sAllFileAccessCallback != null) {
+      startActivityForResult(
+          Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION),
+          REQUEST_ALL_FILE_ACCESS_CODE
+      )
     } else {
       PermissionSetting().start(this, REQUEST_SETTING_CODE)
     }
@@ -54,7 +62,9 @@ internal class PermissionSettingActivity : Activity() {
       if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         result = result or packageManager.canRequestPackageInstalls()
       }
-      sRequestInstallPackageListener?.complete(result)
+      sRequestInstallPackageCallback?.complete(result)
+    } else if (requestCode == REQUEST_ALL_FILE_ACCESS_CODE) {
+      sAllFileAccessCallback?.complete(Environment.isExternalStorageManager())
     } else if (requestCode == REQUEST_SETTING_CODE) {
       var permissions = intent.getStringArrayExtra(PERMISSIONS)
       if (permissions.isNullOrEmpty()) {
@@ -66,13 +76,19 @@ internal class PermissionSettingActivity : Activity() {
         sDeniedPermissionCallback?.complete(permissions)
       }
     }
+    release()
     finish()
   }
 
   override fun onDestroy() {
     super.onDestroy()
+    release()
+  }
+
+  private fun release() {
     sDeniedPermissionCallback = null
-    sRequestInstallPackageListener = null
+    sRequestInstallPackageCallback = null
+    sAllFileAccessCallback = null
   }
 
   companion object {
@@ -83,15 +99,23 @@ internal class PermissionSettingActivity : Activity() {
     private const val REQUEST_INSTALL_PACKAGES = "request_install_package"
     private const val REQUEST_INSTALL_PACKAGES_CODE = 7011
 
+    private const val REQUEST_ALL_FILE_ACCESS_CODE = 6011
+
+    @Volatile
     private var sDeniedPermissionCallback: CancellableContinuation<Array<String>?>? = null
-    private var sRequestInstallPackageListener: CancellableContinuation<Boolean>? = null
+
+    @Volatile
+    private var sRequestInstallPackageCallback: CancellableContinuation<Boolean>? = null
+
+    @Volatile
+    private var sAllFileAccessCallback: CancellableContinuation<Boolean>? = null
 
     @TargetApi(Build.VERSION_CODES.O)
     fun delegateInstallPackage(
         context: Context,
         requestInstallPackageCallback: CancellableContinuation<Boolean>
     ) {
-      sRequestInstallPackageListener = requestInstallPackageCallback
+      sRequestInstallPackageCallback = requestInstallPackageCallback
       val intent = Intent(context, PermissionActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       intent.putExtra(REQUEST_INSTALL_PACKAGES, true)
@@ -110,6 +134,19 @@ internal class PermissionSettingActivity : Activity() {
       val intent = Intent(context, PermissionSettingActivity::class.java)
       intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       intent.putExtra(PERMISSIONS, permissions)
+      context.startActivity(intent)
+    }
+
+    /**
+     * Request for all file manage.
+     */
+    fun delegateAllFileAccessSetting(
+        context: Context,
+        allFileAccessCallback: CancellableContinuation<Boolean>
+    ) {
+      sAllFileAccessCallback = allFileAccessCallback
+      val intent = Intent(context, PermissionSettingActivity::class.java)
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
       context.startActivity(intent)
     }
 

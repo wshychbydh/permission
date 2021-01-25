@@ -1,6 +1,8 @@
 package com.eye.cool.permission.checker
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
 import androidx.fragment.app.Fragment
 import com.eye.cool.permission.rationale.*
 import com.eye.cool.permission.rationale.DefaultRationale
@@ -8,6 +10,7 @@ import com.eye.cool.permission.rationale.InstallPackageSettingRationale
 import com.eye.cool.permission.rationale.RationaleDelegate
 import com.eye.cool.permission.rationale.SettingRationale
 import com.eye.cool.permission.support.CompatContext
+import com.eye.cool.permission.support.Permission
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 
@@ -50,7 +53,7 @@ class Request private constructor(
     }
 
     /**
-     * @param permission Requested permission is required
+     * [permission] Requested permission is required
      */
     fun permission(permission: String): Builder {
       request.permissions.add(permission)
@@ -58,7 +61,7 @@ class Request private constructor(
     }
 
     /**
-     * @param permissions Requested permissions are required
+     * [permissions] Requested permissions are required
      */
     fun permissions(permissions: Array<String>): Builder {
       request.permissions.addAll(permissions)
@@ -66,7 +69,7 @@ class Request private constructor(
     }
 
     /**
-     * @param permissions Requested permissions are required
+     * [permissions] Requested permissions are required
      */
     fun permissions(permissions: Collection<String>): Builder {
       request.permissions.addAll(permissions)
@@ -75,7 +78,7 @@ class Request private constructor(
 
 
     /**
-     * @param showRationaleWhenRequest Show Permission dialog when requesting, default false
+     * [showRationaleWhenRequest] Show Permission dialog when requesting, default false
      */
     fun showRationaleWhenRequest(showRationaleWhenRequest: Boolean): Builder {
       request.showRationaleWhenRequest = showRationaleWhenRequest
@@ -83,7 +86,8 @@ class Request private constructor(
     }
 
     /**
-     * @param showInstallRationaleWhenRequest Show Install Permission dialog when requesting, default false
+     * [showInstallRationaleWhenRequest] Show Install Permission dialog when requesting,
+     * default false
      */
     fun showInstallRationaleWhenRequest(showInstallRationaleWhenRequest: Boolean): Builder {
       request.showInstallRationaleWhenRequest = showInstallRationaleWhenRequest
@@ -91,7 +95,7 @@ class Request private constructor(
     }
 
     /**
-     * @param showRationaleSettingWhenDenied Show Settings dialog when permission denied, default true
+     * [showRationaleSettingWhenDenied] Show Settings dialog when permission denied, default true
      */
     fun showRationaleSettingWhenDenied(showRationaleSettingWhenDenied: Boolean = true): Builder {
       request.showRationaleSettingWhenDenied = showRationaleSettingWhenDenied
@@ -99,7 +103,7 @@ class Request private constructor(
     }
 
     /**
-     * @param rationale The dialog that leads to user authorization
+     * [rationale] The dialog that leads to user authorization
      */
     fun rationale(rationale: Rationale): Builder {
       request.rationale = RationaleDelegate(rationale)
@@ -107,7 +111,7 @@ class Request private constructor(
     }
 
     /**
-     * @param rationaleSetting The Settings dialog that leads to user authorize
+     * [rationaleSetting] The Settings dialog that leads to user authorize
      */
     fun rationaleSetting(rationaleSetting: Rationale): Builder {
       request.rationaleSetting = RationaleDelegate(rationaleSetting)
@@ -115,12 +119,33 @@ class Request private constructor(
     }
 
     /**
-     * It will only pop up when you request the permission of 'android.Manifest.permission.REQUEST_INSTALL_PACKAGES'
+     * It will only pop up when you request the permission of
+     * 'android.Manifest.permission.REQUEST_INSTALL_PACKAGES'
      *
-     * @param rationaleInstallPackageSetting The Settings dialog that leads to user authorize
+     * [rationaleInstallPackageSetting] The Settings dialog that leads to user authorize
      */
     fun rationaleInstallPackageSetting(rationaleInstallPackageSetting: Rationale): Builder {
       request.rationaleInstallPackageSetting = RationaleDelegate(rationaleInstallPackageSetting)
+      return this
+    }
+
+    /**
+     * [Manifest.permission.MANAGE_EXTERNAL_STORAGE]
+     * If [Build.VERSION.SDK_INT] is exceeds [Build.VERSION_CODES.R],
+     * will request manage external storage.
+     */
+    fun requestManageExternalStorage(): Builder {
+      permission(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+      return this
+    }
+
+    /**
+     * [Manifest.permission.REQUEST_INSTALL_PACKAGES]
+     * If [Build.VERSION.SDK_INT] is exceeds [Build.VERSION_CODES.O],
+     * will request install package.
+     */
+    fun requestInstallPackages(): Builder {
+      permission(Manifest.permission.REQUEST_INSTALL_PACKAGES)
       return this
     }
 

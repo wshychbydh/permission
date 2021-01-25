@@ -27,4 +27,6 @@
   <string name="permission_select_album">Album</string>
 
   <string name="permission_activity_recognition">Activity Recognition</string>
+
+  <string name="permission_all_file_access">All File Access</string>
 </resources>

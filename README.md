@@ -1,20 +1,22 @@
-# Permission
+# [Permission](https://github.com/wshychbydh/permission)
 
 ## Android权限适配
 
 ### 功能介绍：
 
-* 适配6.0以上运行时权限
+* 支持6.0以上运行时权限
 
-* 适配6.0以下存储权限，照相机权限，录音权限，其他返回已授权
+* 支持6.0以下存储权限，照相机权限，录音权限，其他返回已授权
 
-* 适配8.0以上的安装包权限
+* 支持8.0以上的安装包权限
 
-* 可自定义引导权限弹框及设置弹框
+* 支持11.0所有文件访问权限请求
 
-* 可自定义引导权限提示语
+* 支持自定义引导权限弹框及设置弹框
 
-* 引导设置权限并监听回调结果
+* 支持自定义引导权限提示语
+
+* 支持引导权限设置并监听回调结果
 
 ### 使用方法：
 
@@ -59,56 +61,49 @@
     Permission.clearText()                                 //移除所有动态添加的权限
 ```
 
-  - 有且仅有android.permission.REQUEST_INSTALL_PACKAGES 或 android.permission.INSTALL_PACKAGES(**系统**)时，才会弹出引导授权安装包提示框
-
   - 所有请求的权限都必须在Manifest中声明，否则一律返回false
 
   - 请求权限的过程中可能会导致Activity出现一次或多次paused -> resumed
 
 ### 示例：
 
-1. 使用PermissionChecker
+#### 构建
+  [Request](app/src/main/java/com/eye/cool/permission/checker/Request.kt)请求参数
+```kotlin
+    val request = Request.Builder(context)
+                    .permission(permission)                    //请求的单个权限
+                    .permissions(permissions)                  //请求的多个权限
+                    .rationale(rationale)                      //权限提示弹框（可选）
+                    .rationaleSetting(rationale)               //引导设置弹框（可选）
+                    .rationaleInstallPackageSetting(rationale) //引导设置安装未知来源应用弹框（可选）
+                    .showRationaleSettingWhenDenied(boolean)   //是否弹设置框去引导授权（默认true）
+                    .showRationaleWhenRequest(boolean)         //是否弹框提示需要动态申请的权限（默认false）
+                    .showInstallRationaleWhenRequest(boolean)  //是否弹框提示安装APK需要申请的权限（默认false）
+                    .requestInstallPackages()                  //8.0请求安装包权限（默认不请求）
+                    .requestManageExternalStorage()            //11.0请求文件所有访问权限（默认不请求）
+                    .build()
 ```
-    PermissionChecker(
-        Request.Builder(context)
-            .permission(permission)                       //请求的单个权限
-            .permissions(permissions)                     //请求的多个权限
-            .rationale(rationale)                         //权限提示弹框（可选）
-            .rationaleSetting(rationale)                  //引导设置弹框（可选）
-            .rationaleInstallPackageSetting(rationale)    //引导设置安装未知来源应用弹框（可选）
-            .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
-            .showRationaleWhenRequest(boolean)            //是否弹框提示需要动态申请的权限（默认false）
-            .showInstallRationaleWhenRequest(boolean)     //是否弹框提示安装APK需要申请的权限（默认false）
-            .build()
-    ).check {
+
+#### 使用
+
+1.[PermissionChecker](app/src/main/java/com/eye/cool/permission/PermissionChecker.kt)
+```kotlin
+    PermissionChecker(request).check {
       //todo
       //根据返回的result.isSucceed()判断请求的权限是否成功
     }
 ```
 
-2. 使用扩展方法 **（推荐）**
-```
-    val result = permissionForResult(
-          Request.Builder(context)
-              .permission(permission)                       //请求的单个权限
-              .permissions(permissions)                     //请求的多个权限
-              .rationale(rationale)                         //权限提示弹框（可选）
-              .rationaleSetting(rationale)                  //引导设置弹框（可选）
-              .rationaleInstallPackageSetting(rationale)    //引导设置安装未知来源应用弹框（可选）
-              .showRationaleSettingWhenDenied(boolean)      //是否弹设置框去引导授权（默认true）
-              .showRationaleWhenRequest(boolean)            //是否弹框提示需要动态申请的权限（默认false）
-              .showInstallRationaleWhenRequest(boolean)     //是否弹框提示安装APK需要申请的权限（默认false）
-              .build()
-    )
+2.[扩展](app/src/main/java/com/eye/cool/permission/checker/permission.kt) **（推荐）**
+```kotlin
+    val result = permissionForResult(request)
     //todo
     //根据返回的result.isSucceed()判断请求的权限是否成功
 ```
-#####   
- 
-**Demo地址：(https://github.com/wshychbydh/SampleDemo)**    
-    
-##
 
+
+### **[Demo](https://github.com/wshychbydh/SampleDemo)**  
+    
 ###### **欢迎fork，更希望你能贡献commit.** (*￣︶￣)    
 
 ###### 联系方式 wshychbydh@gmail.com

@@ -11,6 +11,8 @@ import com.eye.cool.permission.support.Permission
 import com.eye.cool.permission.support.PermissionUtil
 import com.eye.cool.permission.support.complete
 import kotlinx.coroutines.*
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -131,10 +133,11 @@ class PermissionChecker(
 
   @TargetApi(Build.VERSION_CODES.M)
   private suspend fun requestPermission(): Array<String>? {
-    val denied = PermissionUtil.getDeniedPermissions(
-        ctx.context(),
-        request.permissions.toTypedArray()
-    )
+
+    val filtered = tryRequestFileAccess(request.permissions)
+
+    val denied = PermissionUtil.getDeniedPermissions(ctx.context(), filtered)
+
     return when {
       denied.isEmpty() -> null
       else -> filterPermissions(denied)
@@ -152,17 +155,34 @@ class PermissionChecker(
 
       request.showRationaleWhenRequest -> {
         val result = request.rationale.request(request.scope, ctx.context(), filtered)
-        return if (result) {
-          val grantResults = ctx.requestPermission(filtered)
-          return verifyPermissions(filtered, grantResults)
-        } else filtered
+        return if (result) doRequestPermission(filtered) else filtered
       }
 
-      else -> {
-        val grantResults = ctx.requestPermission(filtered)
-        return verifyPermissions(filtered, grantResults)
+      else -> return doRequestPermission(filtered)
+    }
+  }
+
+  private suspend fun tryRequestFileAccess(permissions: ArrayList<String>): Array<String> {
+
+    val fileAccessPermission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
+
+    if (!permissions.contains(fileAccessPermission)) return permissions.toTypedArray()
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+      permissions.removeAll(arrayOf(fileAccessPermission))
+    } else {
+      val allPermissions = PermissionUtil.getRequestedPermissions(ctx.context())
+      if (allPermissions.contains(fileAccessPermission) && ctx.requestAllFileAccess()) {
+        permissions.removeAll(arrayOf(fileAccessPermission))
       }
     }
+
+    return permissions.toTypedArray()
+  }
+
+  private suspend fun doRequestPermission(permissions: Array<String>): Array<String>? {
+    val grantResults = ctx.requestPermission(permissions)
+    return verifyPermissions(permissions, grantResults)
   }
 
   private suspend fun verifyPermissions(
@@ -182,7 +202,8 @@ class PermissionChecker(
     return when {
       deniedArray.isEmpty() -> null
 
-      request.showRationaleSettingWhenDenied && hasAlwaysDeniedPermission(deniedArray) -> {
+      request.showRationaleSettingWhenDenied
+          && hasAlwaysDeniedPermission(deniedArray) -> {
         val result = request.rationaleSetting.request(request.scope, ctx.context(), deniedArray)
         if (result) ctx.startSettingForResult(deniedArray) else deniedArray
       }

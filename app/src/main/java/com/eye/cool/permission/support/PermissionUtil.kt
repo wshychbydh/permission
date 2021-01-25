@@ -57,10 +57,10 @@ object PermissionUtil {
   }
 
   /**
-   * Get registered permissions in AndroidManifest
+   * Get registered permissions in AndroidManifest or empty array
    */
   @JvmStatic
-  fun getRequestedPermissions(context: Context): Array<String>? {
+  fun getRequestedPermissions(context: Context): Array<String> {
     try {
       val packageInfo: PackageInfo = context.packageManager
           .getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
@@ -68,7 +68,7 @@ object PermissionUtil {
     } catch (e: PackageManager.NameNotFoundException) {
       e.printStackTrace()
     }
-    return null
+    return emptyArray()
   }
 
   /**
@@ -174,5 +174,12 @@ object PermissionUtil {
           && installPermissions.contains(permissions[1])
     }
     return false
+  }
+
+  internal fun isNeedRequestAllFileAccessPermission(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
+    val rp = getRequestedPermissions(context)
+    val allFileAccessPermission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
+    return rp?.contains(allFileAccessPermission) ?: false
   }
 }

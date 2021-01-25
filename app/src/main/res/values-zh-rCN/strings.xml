@@ -28,4 +28,6 @@
   <string name="permission_select_album">从相册选取</string>
 
   <string name="permission_activity_recognition">界面活动识别</string>
+
+  <string name="permission_all_file_access">所有文件访问权限</string>
 </resources>

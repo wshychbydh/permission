@@ -234,6 +234,9 @@ object Permission {
       android.Manifest.permission_group.ACTIVITY_RECOGNITION -> {
         context.getString(R.string.permission_activity_recognition)
       }
+      MANAGE_EXTERNAL_STORAGE -> {
+        context.getString(R.string.permission_all_file_access)
+      }
       else -> {
         // fixme un known permission name
         permission.substring(permission.lastIndexOf(".") + 1, permission.length)
