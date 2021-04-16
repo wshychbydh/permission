@@ -64,7 +64,10 @@ internal class PermissionSettingActivity : Activity() {
       }
       sRequestInstallPackageCallback?.complete(result)
     } else if (requestCode == REQUEST_ALL_FILE_ACCESS_CODE) {
-      sAllFileAccessCallback?.complete(Environment.isExternalStorageManager())
+      val access = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        Environment.isExternalStorageManager()
+      } else true
+      sAllFileAccessCallback?.complete(access)
     } else if (requestCode == REQUEST_SETTING_CODE) {
       var permissions = intent.getStringArrayExtra(PERMISSIONS)
       if (permissions.isNullOrEmpty()) {

@@ -21,17 +21,16 @@
 ### 使用方法：
 
 1、 在root目录的build.gradle目录中添加
-```
+```groovy
     allprojects {
         repositories {
-            ...
             maven { url 'https://jitpack.io' }
         }
     }
 ```
 
 2、 在项目的build.gradle中添加依赖
-```
+```groovy
     dependencies {
         implementation 'com.github.wshychbydh:permission:Tag'
     }
@@ -40,14 +39,12 @@
 3、 注意事项：
 
   - 如果编译的时候报重复的'META-INF/app_release.kotlin_module'时，在app的build.gradle文件的android下添加
-```
+```groovy
     packagingOptions {
         exclude 'META-INF/app_release.kotlin_module'
     }
-
-报其他类似的重复错误时，添加方式同上。
-```
-
+``` 
+    报其他类似的重复错误时，添加方式同上。
 
   - 该工具类只提供运行时权限申请，未提供7.0以上文件访问权限，需自行添加
 
@@ -55,7 +52,7 @@
 
   - 添加/移除自定义权限提示语：（自定义提示语优先级高于默认提示语）
 
-```
+```kotlin
     Permission.addTranslateText(permission, translate)     //动态添加权限(permission)对应的提示语(translate)
     Permission.removeTranslateText(permission, translate)  //移除动态添加的权限(permission)对应的提示语(translate)
     Permission.clearText()                                 //移除所有动态添加的权限
@@ -79,7 +76,7 @@
                     .showRationaleSettingWhenDenied(boolean)   //是否弹设置框去引导授权（默认true）
                     .showRationaleWhenRequest(boolean)         //是否弹框提示需要动态申请的权限（默认false）
                     .showInstallRationaleWhenRequest(boolean)  //是否弹框提示安装APK需要申请的权限（默认false）
-                    .requestInstallPackages()                  //8.0请求安装包权限（默认不请求）
+                    .requestInstallPackages()                  //8.0请求安装包权限（默认不请求），注：11.0会重启应用(系统原因)
                     .requestManageExternalStorage()            //11.0请求文件所有访问权限（默认不请求）
                     .build()
 ```
@@ -94,9 +91,10 @@
     }
 ```
 
-* [扩展](app/src/main/java/com/eye/cool/permission/checker/permission.kt) **（推荐）**
+* [协成调用](app/src/main/java/com/eye/cool/permission/extend/Permission) **（推荐）**
 ```kotlin
-    val result = permissionForResult(request)
+    val result1 = Permission.requestForResult(context, permissions)
+    val result2 = Permission.requestForResult(request)
     //todo
     //根据返回的result.isSucceed()判断请求的权限是否成功
 ```

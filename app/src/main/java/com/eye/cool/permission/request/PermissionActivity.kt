@@ -27,9 +27,10 @@ internal class PermissionActivity : Activity() {
     val permissions = intent.getStringArrayExtra(REQUEST_PERMISSIONS)
 
     if (permissions.isNullOrEmpty()) {
+      sGrantResultsCallback?.complete(intArrayOf())
       finish()
     } else {
-      requestPermissions(permissions, 1)
+      requestPermissions(permissions, REQUEST_PERMISSION_CODE)
     }
   }
 
@@ -38,7 +39,9 @@ internal class PermissionActivity : Activity() {
       permissions: Array<String>,
       grantResults: IntArray
   ) {
-    sGrantResultsCallback?.complete(grantResults)
+    if (requestCode == REQUEST_PERMISSION_CODE) {
+      sGrantResultsCallback?.complete(grantResults)
+    }
     finish()
   }
 
@@ -53,6 +56,7 @@ internal class PermissionActivity : Activity() {
 
   companion object {
 
+    private const val REQUEST_PERMISSION_CODE = 3001
     private const val REQUEST_PERMISSIONS = "permissions"
 
     private var sGrantResultsCallback: CancellableContinuation<IntArray>? = null

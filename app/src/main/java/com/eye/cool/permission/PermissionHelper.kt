@@ -43,11 +43,12 @@ class PermissionHelper private constructor(private var context: CompatContext) {
   fun request() {
     val request = Request.Builder(context)
         .rationale(rationale)
+        .permissions(permissions)
         .rationaleSetting(rationaleSetting)
         .rationaleInstallPackageSetting(rationaleInstallPackagesSetting)
         .showInstallRationaleWhenRequest(showInstallRationaleWhenRequest)
         .showRationaleWhenRequest(showRationaleWhenRequest)
-        .showInstallRationaleWhenRequest(showInstallRationaleWhenRequest)
+        .showRationaleSettingWhenDenied(showRationaleSettingWhenDenied)
         .build()
     PermissionChecker(request).check {
       callback?.invoke(it.isSucceed())

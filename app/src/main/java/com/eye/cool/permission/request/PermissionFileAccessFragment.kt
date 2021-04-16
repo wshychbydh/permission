@@ -1,6 +1,8 @@
 package com.eye.cool.permission.request
 
+import android.annotation.TargetApi
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
@@ -12,6 +14,7 @@ import kotlinx.coroutines.CancellableContinuation
 /**
  *Created by ycb on 2021/1/22
  */
+@TargetApi(Build.VERSION_CODES.R)
 internal class PermissionFileAccessFragment : Fragment() {
 
   private var callback: CancellableContinuation<Boolean>? = null
