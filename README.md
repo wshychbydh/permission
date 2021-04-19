@@ -53,14 +53,18 @@
   - 添加/移除自定义权限提示语：（自定义提示语优先级高于默认提示语）
 
 ```kotlin
-    Permission.addTranslateText(permission, translate)     //动态添加权限(permission)对应的提示语(translate)
-    Permission.removeTranslateText(permission, translate)  //移除动态添加的权限(permission)对应的提示语(translate)
-    Permission.clearText()                                 //移除所有动态添加的权限
+    PermissionTranslator.addText(permission, translate)     //动态添加权限(permission)对应的提示语(translate)
+    PermissionTranslator.removeText(permission, translate)  //移除动态添加的权限(permission)对应的提示语(translate)
+    PermissionTranslator.reset()                            //移除所有动态添加的权限
 ```
 
   - 所有请求的权限都必须在Manifest中声明，否则一律返回false
 
   - 请求权限的过程中可能会导致Activity出现一次或多次paused -> resumed
+
+  - 8.0以下会自动过滤安装权限
+  
+  - 11.0会自动兼容storage权限，若已授权MANAGE_EXTERNAL_STORAGE，则默认允许read和write权限，反之则默认未授权。若仅请求read权限，则走正常的动态请求流程。
 
 ### 示例：
 
