@@ -1,15 +1,13 @@
 package com.eye.cool.permission.rationale
 
 import android.content.Context
-import android.text.TextUtils
 import androidx.appcompat.app.AlertDialog
 import com.eye.cool.permission.R
-import com.eye.cool.permission.support.PermissionTranslator
 
 /**
  * Created by cool on 2018/4/20.
  */
-internal class SettingRationale : Rationale {
+internal class InstallPackageRationale : Rationale {
 
   override fun showRationale(
       context: Context,
@@ -17,12 +15,9 @@ internal class SettingRationale : Rationale {
       callback: (result: Boolean) -> Unit
   ) {
 
-    val permissionNames = PermissionTranslator.toText(context, permissions)
-    val message = context.getString(R.string.permission_setting_rationale,
-        getAppName(context), TextUtils.join("\n", permissionNames))
+    val message = context.getString(R.string.permission_install_packages_rationale, getAppName(context))
 
-    AlertDialog
-        .Builder(context)
+    AlertDialog.Builder(context)
         .setCancelable(false)
         .setTitle(R.string.permission_title_rationale)
         .setMessage(message)

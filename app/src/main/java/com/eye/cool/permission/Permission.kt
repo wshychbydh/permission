@@ -1,4 +1,4 @@
-package com.eye.cool.permission.extend
+package com.eye.cool.permission
 
 import android.content.Context
 import androidx.fragment.app.Fragment

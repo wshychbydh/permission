@@ -7,7 +7,7 @@ import com.eye.cool.permission.R
 /**
  * Created by cool on 2018/4/20.
  */
-internal class InstallPackageSettingRationale : Rationale {
+internal class ManageFileRationale : Rationale {
 
   override fun showRationale(
       context: Context,
@@ -15,7 +15,7 @@ internal class InstallPackageSettingRationale : Rationale {
       callback: (result: Boolean) -> Unit
   ) {
 
-    val message = context.getString(R.string.permission_install_packages_setting_rationale, getAppName(context))
+    val message = context.getString(R.string.permission_manage_file_rationale, getAppName(context))
 
     AlertDialog.Builder(context)
         .setCancelable(false)
@@ -31,7 +31,7 @@ internal class InstallPackageSettingRationale : Rationale {
   }
 
   private fun getAppName(context: Context): String {
-    val appInfo = context.packageManager.getApplicationInfo(context.packageName, 0) ?: return ""
+    val appInfo = context.packageManager.getApplicationInfo(context.packageName, 0)
     return context.packageManager.getApplicationLabel(appInfo) as? String ?: ""
   }
 }

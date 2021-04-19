@@ -28,7 +28,7 @@ object PermissionUtil {
     return try {
       camera = Camera.open()
       // setParameters is Used for MeiZu MX5.
-      camera!!.parameters = camera!!.parameters
+      camera!!.parameters = camera.parameters
       true
     } catch (e: Exception) {
       false
@@ -149,6 +149,34 @@ object PermissionUtil {
     return requestList.toTypedArray()
   }
 
+  internal fun filterPermissionGroup(permissions: List<String>): ArrayList<String> {
+    val filtered = ArrayList<String>()
+    permissions.forEach {
+      if (it.startsWith("android.permission-group")) {
+        filtered.addAll(parsePermissionGroup(it))
+      } else {
+        filtered.add(it)
+      }
+    }
+    return filtered
+  }
+
+  private fun parsePermissionGroup(group: String): Array<String> {
+    return when (group) {
+      Manifest.permission_group.CALENDAR -> PermissionGroup.CALENDAR
+      Manifest.permission_group.CALL_LOG -> PermissionGroup.CALL_LOG
+      Manifest.permission_group.CAMERA -> PermissionGroup.CAMERA
+      Manifest.permission_group.CONTACTS -> PermissionGroup.CONTACTS
+      Manifest.permission_group.LOCATION -> PermissionGroup.LOCATION
+      Manifest.permission_group.MICROPHONE -> PermissionGroup.MICROPHONE
+      Manifest.permission_group.PHONE -> PermissionGroup.PHONE
+      Manifest.permission_group.SENSORS -> PermissionGroup.SENSORS
+      Manifest.permission_group.SMS -> PermissionGroup.SMS
+      Manifest.permission_group.STORAGE -> PermissionGroup.STORAGE
+      else -> arrayOf(group)
+    }
+  }
+
   internal fun isNeedShowRationalePermission(context: Context, permission: String): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
     val packageManager = context.packageManager
@@ -162,8 +190,8 @@ object PermissionUtil {
     }
   }
 
-  internal fun hasInstallPermissionOnly(permissions: Array<String>): Boolean {
-    val installPermissions = Permission.INSTALL_PACKAGE
+  internal fun hasInstallPermissionOnly(permissions: List<String>): Boolean {
+    val installPermissions = PermissionGroup.INSTALL_PACKAGE
     if (permissions.size > installPermissions.size) return false
     if (permissions.size == 1) {
       return permissions[0] == Manifest.permission.INSTALL_PACKAGES
@@ -176,10 +204,32 @@ object PermissionUtil {
     return false
   }
 
+  internal fun hasManageFilePermissionOnly(permissions: List<String>): Boolean {
+
+    if (BuildVersion.isBuildBelowR()) return false
+
+    if (permissions.size == 1) {
+      return permissions[0] == Manifest.permission.MANAGE_EXTERNAL_STORAGE
+          || permissions[0] == Manifest.permission.WRITE_EXTERNAL_STORAGE
+    }
+    if (permissions.size == 2) {
+      val write = permissions.contains(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+          || permissions.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+      val read = permissions.contains(Manifest.permission.READ_EXTERNAL_STORAGE)
+      return write && read
+    }
+    if (permissions.size == 3) {
+      return permissions.contains(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+          && permissions.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+          && permissions.contains(Manifest.permission.READ_EXTERNAL_STORAGE)
+    }
+    return false
+  }
+
   internal fun isNeedRequestAllFileAccessPermission(context: Context): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
     val rp = getRequestedPermissions(context)
     val allFileAccessPermission = Manifest.permission.MANAGE_EXTERNAL_STORAGE
-    return rp?.contains(allFileAccessPermission) ?: false
+    return rp.contains(allFileAccessPermission)
   }
 }

@@ -17,10 +17,11 @@
   <string name="permission_ok">OK</string>
   <string name="permission_no">NO</string>
 
-  <string name="permission_title_rationale">tips</string>
+  <string name="permission_title_rationale">prompt</string>
   <string name="permission_rationale">Grant the following permissions to continue the program:\n\n%1$s</string>
   <string name="permission_setting_rationale">“%1$s” need these permissions, please authorize in Settings:\n\n%2$s</string>
-  <string name="permission_install_packages_setting_rationale">“%1$s” version upgrade requires permission, please authorize the installation of unknown source applications</string>
+  <string name="permission_install_packages_rationale">“%1$s” requires permission, please authorize the installation of unknown source applications</string>
+  <string name="permission_manage_file_rationale">Allow \'%1$s\' to access and manage all files</string>
   <string name="permission_take_photos">Please grant permission to take photos</string>
   <string name="permission_storage">Grant access to the storage</string>
   <string name="permission_take_photo">Photos</string>
@@ -28,5 +29,5 @@
 
   <string name="permission_activity_recognition">Activity Recognition</string>
 
-  <string name="permission_all_file_access">All File Access</string>
+  <string name="permission_all_file_access">Allow to access and manage all files</string>
 </resources>

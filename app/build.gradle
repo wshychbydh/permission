@@ -11,12 +11,20 @@ android {
     defaultConfig {
         minSdkVersion 8
         targetSdkVersion 30
-        versionCode 18
-        versionName "1.2.6"
+        versionCode 19
+        versionName "1.2.7"
     }
 
     lintOptions {
+        abortOnError false
+        checkAllWarnings false
+        checkReleaseBuilds false
         ignoreWarnings true
+        quiet true
+    }
+
+    tasks.withType(JavaCompile) {
+        options.warnings = false
     }
 }
 

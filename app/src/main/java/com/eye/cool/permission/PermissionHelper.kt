@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.eye.cool.permission.checker.Request
 import com.eye.cool.permission.rationale.DefaultRationale
-import com.eye.cool.permission.rationale.InstallPackageSettingRationale
+import com.eye.cool.permission.rationale.InstallPackageRationale
 import com.eye.cool.permission.rationale.Rationale
 import com.eye.cool.permission.rationale.SettingRationale
 import com.eye.cool.permission.support.CompatContext
@@ -28,7 +28,7 @@ class PermissionHelper private constructor(private var context: CompatContext) {
 
   private var rationale: Rationale = DefaultRationale()
   private var rationaleSetting: Rationale = SettingRationale()
-  private var rationaleInstallPackagesSetting: Rationale = InstallPackageSettingRationale()
+  private var rationaleInstallPackagesSetting: Rationale = InstallPackageRationale()
   private var callback: ((authorise: Boolean) -> Unit)? = null
   private var showRationaleSettingWhenDenied = true
   private var showRationaleWhenRequest = false
@@ -45,7 +45,7 @@ class PermissionHelper private constructor(private var context: CompatContext) {
         .rationale(rationale)
         .permissions(permissions)
         .rationaleSetting(rationaleSetting)
-        .rationaleInstallPackageSetting(rationaleInstallPackagesSetting)
+        .rationaleInstallPackage(rationaleInstallPackagesSetting)
         .showInstallRationaleWhenRequest(showInstallRationaleWhenRequest)
         .showRationaleWhenRequest(showRationaleWhenRequest)
         .showRationaleSettingWhenDenied(showRationaleSettingWhenDenied)

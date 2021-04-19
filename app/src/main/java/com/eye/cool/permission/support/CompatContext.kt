@@ -7,9 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import com.eye.cool.permission.request.*
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 /**
@@ -117,13 +115,13 @@ internal class CompatContext {
     }
     when {
       proxyActivity != null -> {
-        PermissionFileAccessFragment.delegate(proxyActivity!!, it)
+        PermissionManageFileFragment.delegate(proxyActivity!!, it)
       }
       context != null -> {
         PermissionSettingActivity.delegateAllFileAccessSetting(context(), it)
       }
       activity != null -> {
-        PermissionFileAccessFragment.delegate(activity!!, it)
+        PermissionManageFileFragment.delegate(activity!!, it)
       }
       else -> throw IllegalStateException("CompatContext init error")
     }

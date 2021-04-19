@@ -4,7 +4,7 @@ import android.content.Context
 import android.text.TextUtils
 import androidx.appcompat.app.AlertDialog
 import com.eye.cool.permission.R
-import com.eye.cool.permission.support.Permission
+import com.eye.cool.permission.support.PermissionTranslator
 
 /**
  * Created by cool on 2018/4/20.
@@ -17,7 +17,7 @@ internal class DefaultRationale : Rationale {
       callback: (result: Boolean) -> Unit
   ) {
 
-    val permissionNames = Permission.transformText(context, permissions)
+    val permissionNames = PermissionTranslator.toText(context, permissions)
     val message = context.getString(R.string.permission_rationale, TextUtils.join("\n", permissionNames))
 
     AlertDialog
