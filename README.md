@@ -71,6 +71,8 @@
 #### 构建
   [Request](app/src/main/java/com/eye/cool/permission/checker/Request.kt)请求参数
 ```kotlin
+    
+    //kotlin调用：val request = Request.build(context){...} (推荐)
     val request = Request.Builder(context)
                     .permission(permission)                    //请求的单个权限
                     .permissions(permissions)                  //请求的多个权限

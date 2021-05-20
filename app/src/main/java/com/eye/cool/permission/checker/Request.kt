@@ -5,10 +5,6 @@ import android.content.Context
 import android.os.Build
 import androidx.fragment.app.Fragment
 import com.eye.cool.permission.rationale.*
-import com.eye.cool.permission.rationale.DefaultRationale
-import com.eye.cool.permission.rationale.InstallPackageRationale
-import com.eye.cool.permission.rationale.RationaleDelegate
-import com.eye.cool.permission.rationale.SettingRationale
 import com.eye.cool.permission.support.CompatContext
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
@@ -17,18 +13,29 @@ import kotlinx.coroutines.cancel
  * Created by ycb on 2020/8/31
  */
 class Request private constructor(
-    internal val context: CompatContext
+    internal val context: CompatContext,
+    internal val permissions: List<String>,
+    internal val rationale: RationaleDelegate,
+    internal val rationaleSetting: RationaleDelegate,
+    internal val rationaleInstallPackage: RationaleDelegate,
+    internal val rationaleManageFile: RationaleDelegate,
+    internal val showRationaleSettingWhenDenied: Boolean,
+    internal val showRationaleWhenRequest: Boolean,
+    internal val showInstallRationaleWhenRequest: Boolean,
+    internal val showManageFileRationaleWhenRequest: Boolean
 ) {
 
-  internal var permissions = arrayListOf<String>()
-  internal var rationale = RationaleDelegate(DefaultRationale())
-  internal var rationaleSetting = RationaleDelegate(SettingRationale())
-  internal var rationaleInstallPackage = RationaleDelegate(InstallPackageRationale())
-  internal var rationaleManageFile = RationaleDelegate(ManageFileRationale())
-  internal var showRationaleSettingWhenDenied = true
-  internal var showRationaleWhenRequest = false
-  internal var showInstallRationaleWhenRequest = false
-  internal var showManageFileRationaleWhenRequest = false
+  companion object {
+    inline fun build(
+        context: Context,
+        block: Builder.() -> Unit
+    ) = Builder(context).apply(block).build()
+
+    inline fun build(
+        fragment: Fragment,
+        block: Builder.() -> Unit
+    ) = Builder(fragment.requireContext()).apply(block).build()
+  }
 
   internal var scope = MainScope()
 
@@ -37,45 +44,33 @@ class Request private constructor(
     context.release()
   }
 
-  class Builder {
-
-    private val request: Request
-
-    constructor(context: Context) {
-      request = Request(CompatContext(context))
-    }
-
-    constructor(fragment: Fragment) {
-      request = Request(CompatContext(fragment))
-    }
-
-    internal constructor(context: CompatContext) {
-      request = Request(context)
-    }
+  data class Builder(
+      val context: Context,
+      var permissions: ArrayList<String> = arrayListOf(),
+      var rationale: Rationale = DefaultRationale(),
+      var rationaleSetting: Rationale = SettingRationale(),
+      var rationaleInstallPackage: Rationale = InstallPackageRationale(),
+      var rationaleManageFile: Rationale = ManageFileRationale(),
+      var showRationaleSettingWhenDenied: Boolean = true,
+      var showRationaleWhenRequest: Boolean = false,
+      var showInstallRationaleWhenRequest: Boolean = false,
+      var showManageFileRationaleWhenRequest: Boolean = false
+  ) {
 
     /**
      * [permission] Requested permission is required
      */
-    fun permission(permission: String): Builder {
-      request.permissions.add(permission)
-      return this
-    }
+    fun permission(permission: String) = apply { this.permissions.add(permission) }
 
     /**
      * [permissions] Requested permissions are required
      */
-    fun permissions(permissions: Array<String>): Builder {
-      request.permissions.addAll(permissions)
-      return this
-    }
+    fun permissions(permissions: Array<String>) = apply { this.permissions.addAll(permissions) }
 
     /**
      * [permissions] Requested permissions are required
      */
-    fun permissions(permissions: Collection<String>): Builder {
-      request.permissions.addAll(permissions)
-      return this
-    }
+    fun permissions(permissions: Collection<String>) = apply { this.permissions.addAll(permissions) }
 
 
     /**
@@ -83,19 +78,15 @@ class Request private constructor(
      *
      * [show] Show Permission dialog when requesting, default false
      */
-    fun showRationaleWhenRequest(show: Boolean): Builder {
-      request.showRationaleWhenRequest = show
-      return this
-    }
+    fun showRationaleWhenRequest(show: Boolean) = apply { this.showRationaleWhenRequest = show }
 
     /**
      * @see [rationaleInstallPackage]
      *
      * [show] Show install permission dialog when requesting, default false
      */
-    fun showInstallRationaleWhenRequest(show: Boolean): Builder {
-      request.showInstallRationaleWhenRequest = show
-      return this
+    fun showInstallRationaleWhenRequest(show: Boolean) = apply {
+      this.showInstallRationaleWhenRequest = show
     }
 
     /**
@@ -103,9 +94,8 @@ class Request private constructor(
      *
      * [show] Show manage file permission dialog when requesting, default false
      */
-    fun showManageFileRationaleWhenRequest(show: Boolean): Builder {
-      request.showManageFileRationaleWhenRequest = show
-      return this
+    fun showManageFileRationaleWhenRequest(show: Boolean) = apply {
+      this.showManageFileRationaleWhenRequest = show
     }
 
     /**
@@ -113,25 +103,22 @@ class Request private constructor(
      *
      * [show] Show Settings dialog when permission denied, default true
      */
-    fun showRationaleSettingWhenDenied(show: Boolean): Builder {
-      request.showRationaleSettingWhenDenied = show
-      return this
+    fun showRationaleSettingWhenDenied(show: Boolean) = apply {
+      this.showRationaleSettingWhenDenied = show
     }
 
     /**
      * [rationale] The dialog that leads to user authorization
      */
-    fun rationale(rationale: Rationale): Builder {
-      request.rationale = RationaleDelegate(rationale)
-      return this
+    fun rationale(rationale: Rationale) = apply {
+      this.rationale = rationale
     }
 
     /**
      * [rationaleSetting] The Settings dialog that leads to user authorize
      */
-    fun rationaleSetting(rationaleSetting: Rationale): Builder {
-      request.rationaleSetting = RationaleDelegate(rationaleSetting)
-      return this
+    fun rationaleSetting(rationaleSetting: Rationale) = apply {
+      this.rationaleSetting = rationaleSetting
     }
 
     /**
@@ -142,9 +129,8 @@ class Request private constructor(
      *
      * [rationaleInstallPackage] The Settings dialog that leads to user authorize
      */
-    fun rationaleInstallPackage(rationaleInstallPackage: Rationale): Builder {
-      request.rationaleInstallPackage = RationaleDelegate(rationaleInstallPackage)
-      return this
+    fun rationaleInstallPackage(rationaleInstallPackage: Rationale) = apply {
+      this.rationaleInstallPackage = rationaleInstallPackage
     }
 
     /**
@@ -157,9 +143,8 @@ class Request private constructor(
      *
      * [accessFile] The Settings dialog that leads to user authorize
      */
-    fun rationaleManageFile(accessFile: Rationale): Builder {
-      request.rationaleManageFile = RationaleDelegate(accessFile)
-      return this
+    fun rationaleManageFile(accessFile: Rationale) = apply {
+      this.rationaleManageFile = accessFile
     }
 
     /**
@@ -168,9 +153,8 @@ class Request private constructor(
      * If [Build.VERSION.SDK_INT] is exceeds [Build.VERSION_CODES.R],
      * will request manage external storage.
      */
-    fun requestManageExternalStorage(): Builder {
+    fun requestManageExternalStorage() = apply {
       permission(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
-      return this
     }
 
     /**
@@ -179,11 +163,21 @@ class Request private constructor(
      * If [Build.VERSION.SDK_INT] is exceeds [Build.VERSION_CODES.O],
      * will request install package.
      */
-    fun requestInstallPackages(): Builder {
+    fun requestInstallPackages() = apply {
       permission(Manifest.permission.REQUEST_INSTALL_PACKAGES)
-      return this
     }
 
-    fun build() = request
+    fun build() = Request(
+        context = CompatContext(context),
+        permissions = permissions.distinct(),
+        rationale = RationaleDelegate(rationale),
+        rationaleSetting = RationaleDelegate(rationaleSetting),
+        rationaleInstallPackage = RationaleDelegate(rationaleInstallPackage),
+        rationaleManageFile = RationaleDelegate(rationaleManageFile),
+        showRationaleSettingWhenDenied = showRationaleSettingWhenDenied,
+        showRationaleWhenRequest = showRationaleWhenRequest,
+        showInstallRationaleWhenRequest = showInstallRationaleWhenRequest,
+        showManageFileRationaleWhenRequest = showManageFileRationaleWhenRequest
+    )
   }
 }

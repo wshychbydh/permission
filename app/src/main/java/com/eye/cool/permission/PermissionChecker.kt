@@ -125,7 +125,7 @@ class PermissionChecker(
     return deniedPermissions
   }
 
-  private suspend fun tryFilterPermission(permissions: ArrayList<String>): Array<String>? {
+  private suspend fun tryFilterPermission(permissions: List<String>): Array<String>? {
 
     val filterGroup = PermissionUtil.filterPermissionGroup(permissions)
 

@@ -2,7 +2,6 @@ package com.eye.cool.permission
 
 import android.content.Context
 import androidx.fragment.app.Fragment
-import com.eye.cool.permission.PermissionChecker
 import com.eye.cool.permission.checker.Request
 import com.eye.cool.permission.checker.Result
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -19,7 +18,7 @@ object Permission {
       permission: String
   ) = suspendCancellableCoroutine<Result> {
     PermissionChecker(
-        Request.Builder(context).permission(permission).build()
+        Request.build(context) { permission(permission) }
     ).check(it)
   }
 
@@ -31,7 +30,7 @@ object Permission {
       permissions: Array<String>
   ) = suspendCancellableCoroutine<Result> {
     PermissionChecker(
-        Request.Builder(context).permissions(permissions).build()
+        Request.build(context) { permissions(permissions) }
     ).check(it)
   }
 
@@ -55,7 +54,7 @@ object Permission {
       permission: String
   ) = suspendCancellableCoroutine<Result> {
     PermissionChecker(
-        Request.Builder(fragment).permission(permission).build()
+        Request.build(fragment) { permission(permission) }
     ).check(it)
   }
 
@@ -67,7 +66,7 @@ object Permission {
       permissions: Array<String>
   ) = suspendCancellableCoroutine<Result> {
     PermissionChecker(
-        Request.Builder(fragment).permissions(permissions).build()
+        Request.build(fragment) { permissions(permissions) }
     ).check(it)
   }
 
@@ -79,7 +78,7 @@ object Permission {
       permissions: Collection<String>
   ) = suspendCancellableCoroutine<Result> {
     PermissionChecker(
-        Request.Builder(fragment).permissions(permissions).build()
+        Request.build(fragment) { permissions(permissions) }
     ).check(it)
   }
 
