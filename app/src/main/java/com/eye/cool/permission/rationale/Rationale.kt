@@ -6,7 +6,7 @@ import androidx.annotation.UiThread
 /**
  * Created by cool on 2018/4/16.
  */
-interface Rationale {
+fun interface Rationale {
 
   /**
    * Show rationale of permissions to user.
